@@ -5,8 +5,9 @@ import Button from '@mui/material/Button';
 import { ImmutableX, Config } from '@imtbl/core-sdk';
 
 import { ethSigner, starkSigner } from './services/web3.service';
+import axios from './services/api.service';
 
-// const walletConnection = { ethSigner, starkSigner };
+const walletConnection = { ethSigner, starkSigner };
 
 const MainApp: React.FC = () => {
   const config = Config.SANDBOX;
@@ -44,8 +45,6 @@ const MainApp: React.FC = () => {
     const timestamp = new Date(Date.now());
     timestamp.setMonth(timestamp.getMonth() + 1);
     const timestampUnix = Math.round(timestamp.getTime() / 1000);
-
-    const walletConnection = { ethSigner, starkSigner };
 
     const response = await client.createOrder(walletConnection, {
       buy: {
