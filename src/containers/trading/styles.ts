@@ -17,6 +17,9 @@ const useStyles = makeStyles({
     fontSize: 14,
     display: 'block',
   },
+  logLineSuccess: {
+    color: '#00e676',
+  },
   logLineError: {
     color: '#f44336',
   },

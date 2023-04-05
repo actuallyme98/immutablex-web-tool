@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import clsx from 'clsx';
 
-import { CreateOrderResponse, createStarkSigner } from '@imtbl/core-sdk';
+import { createStarkSigner } from '@imtbl/core-sdk';
 
 // components
 import Box from '@mui/material/Box';
@@ -81,10 +81,50 @@ const TradingPage: React.FC = () => {
     setLogs((prev) => prev.concat(item));
   };
 
+  const triggerBuy = async (rootUser: TradingClient, orderId: number, ownerAddress: string) => {
+    const { client, ethSigner, starkPrivateKey } = rootUser;
+    const starkSigner = createStarkSigner(starkPrivateKey);
+    const ethAddress = await ethSigner.getAddress();
+
+    pushLog({
+      title: `Delected exist order ${orderId}`,
+    });
+
+    pushLog({
+      title: 'Creating Trade ...',
+    });
+
+    await client.createTrade(
+      {
+        ethSigner,
+        starkSigner,
+      },
+      {
+        order_id: orderId,
+        user: ownerAddress,
+      },
+    );
+
+    pushLog({
+      title: `Trade success order ${orderId}`,
+      type: 'success',
+    });
+
+    const updatedBalance = await client.getBalance({
+      owner: ethAddress,
+      address: IMX_ADDRESS,
+    });
+
+    pushLog({
+      title: `Updated balance: ${updatedBalance.balance}`,
+    });
+  };
+
   const onStartTrade = async () => {
     if (clients.length === 0) return;
 
     // const savedSessionData = [...clients];
+    const [_, ...restClients] = clients;
 
     try {
       setIsTradeSubmitting(true);
@@ -92,75 +132,32 @@ const TradingPage: React.FC = () => {
         title: 'Start session ....',
       });
 
-      let existedOrderResponse: CreateOrderResponse | undefined = undefined;
-      let existedUser: string | undefined = undefined;
+      let rootWallet: TradingClient = clients[0];
 
-      for (const selectedClient of clients) {
+      for (const selectedClient of restClients) {
         try {
           const { client, ethSigner, starkPrivateKey, tokenAddress, tokenId } = selectedClient;
-
           const starkSigner = createStarkSigner(starkPrivateKey);
           const ethAddress = await ethSigner.getAddress();
-
           pushLog({
             title: `Selected Address: ${ethAddress}`,
           });
-
           const balance = await client.getBalance({
             owner: ethAddress,
             address: IMX_ADDRESS,
           });
-
           pushLog({
             title: `Balance: ${balance.balance}`,
           });
-
-          if (existedOrderResponse && existedUser) {
-            const orderId = existedOrderResponse.order_id;
-            pushLog({
-              title: `Delected exist order ${orderId}`,
-            });
-
-            pushLog({
-              title: 'Creating Trade ...',
-            });
-
-            await client.createTrade(
-              {
-                ethSigner,
-                starkSigner,
-              },
-              {
-                order_id: orderId,
-                user: existedUser,
-              },
-            );
-
-            pushLog({
-              title: `Trade success order ${orderId}`,
-            });
-
-            const updatedBalance = await client.getBalance({
-              owner: ethAddress,
-              address: IMX_ADDRESS,
-            });
-
-            pushLog({
-              title: `Updated balance: ${updatedBalance.balance}`,
-            });
-          }
-
           if (!tokenAddress || !tokenId) {
             pushLog({
               title: 'Skip this address because TokenAddress or TokenId are empty',
             });
             continue;
           }
-
           pushLog({
             title: `Creating Order ...`,
           });
-
           const createdOrderResponse = await client.createOrder(
             {
               ethSigner,
@@ -180,11 +177,12 @@ const TradingPage: React.FC = () => {
             },
           );
 
-          existedOrderResponse = createdOrderResponse;
-          existedUser = ethAddress;
+          await triggerBuy(rootWallet, createdOrderResponse.order_id, ethAddress);
+          rootWallet = selectedClient;
 
           pushLog({
             title: `Created order success with order id ${createdOrderResponse.order_id}`,
+            type: 'success',
           });
         } catch (error: any) {
           pushLog({
