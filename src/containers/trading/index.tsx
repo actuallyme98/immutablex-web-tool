@@ -120,19 +120,69 @@ const TradingPage: React.FC = () => {
     });
   };
 
+  const triggerLastTx = async (rootClient: TradingClient, rootWallet: TradingClient) => {
+    const { client, ethSigner, starkPrivateKey, tokenAddress, tokenId } = rootClient;
+    const starkSigner = createStarkSigner(starkPrivateKey);
+    const ethAddress = await ethSigner.getAddress();
+    pushLog({
+      title: `Selected Address: ${ethAddress}`,
+    });
+    const balance = await client.getBalance({
+      owner: ethAddress,
+      address: IMX_ADDRESS,
+    });
+    pushLog({
+      title: `Balance: ${balance.balance}`,
+    });
+    if (!tokenAddress || !tokenId) {
+      pushLog({
+        title: 'Skip this address because TokenAddress or TokenId are empty',
+      });
+      return;
+    }
+    pushLog({
+      title: `Creating Order ...`,
+    });
+    const createdOrderResponse = await client.createOrder(
+      {
+        ethSigner,
+        starkSigner,
+      },
+      {
+        buy: {
+          amount: etherToWei(sellAmount),
+          type: 'ERC20',
+          tokenAddress: IMX_ADDRESS,
+        },
+        sell: {
+          tokenAddress,
+          tokenId,
+          type: 'ERC721',
+        },
+      },
+    );
+
+    pushLog({
+      title: `Created order success with order id ${createdOrderResponse.order_id}`,
+      type: 'success',
+    });
+
+    await triggerBuy(rootWallet, createdOrderResponse.order_id, ethAddress);
+  };
+
   const onStartTrade = async () => {
     if (clients.length === 0) return;
 
     // const savedSessionData = [...clients];
-    const [_, ...restClients] = clients;
+    const [rootClient, ...restClients] = clients;
 
     try {
       setIsTradeSubmitting(true);
       pushLog({
-        title: 'Start session ....',
+        title: 'Start session ...',
       });
 
-      let rootWallet: TradingClient = clients[0];
+      let rootWallet: TradingClient = rootClient;
 
       for (const selectedClient of restClients) {
         try {
@@ -177,13 +227,13 @@ const TradingPage: React.FC = () => {
             },
           );
 
-          await triggerBuy(rootWallet, createdOrderResponse.order_id, ethAddress);
-          rootWallet = selectedClient;
-
           pushLog({
             title: `Created order success with order id ${createdOrderResponse.order_id}`,
             type: 'success',
           });
+
+          await triggerBuy(rootWallet, createdOrderResponse.order_id, ethAddress);
+          rootWallet = selectedClient;
         } catch (error: any) {
           pushLog({
             title: error.message,
@@ -192,6 +242,16 @@ const TradingPage: React.FC = () => {
           return;
         }
       }
+
+      pushLog({
+        title: 'Finished all addresses',
+        type: 'success',
+      });
+      pushLog({
+        title: 'Turn to execute first address',
+      });
+
+      await triggerLastTx(rootClient, rootClient);
     } catch (error: any) {
       pushLog({
         title: error.message,
