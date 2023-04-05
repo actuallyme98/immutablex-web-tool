@@ -215,6 +215,7 @@ const TradingPage: React.FC = () => {
         key={index}
         className={clsx(styles.logLine, {
           [styles.logLineError]: item.type === 'error',
+          [styles.logLineSuccess]: item.type === 'success',
         })}
       >
         {`[${index}]:`} {item.title}
