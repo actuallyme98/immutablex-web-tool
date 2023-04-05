@@ -91,6 +91,10 @@ const TradingPage: React.FC = () => {
     });
 
     pushLog({
+      title: `Selected Address: ${ethAddress}`,
+    });
+
+    pushLog({
       title: 'Creating Trade ...',
     });
 
@@ -114,10 +118,6 @@ const TradingPage: React.FC = () => {
       owner: ethAddress,
       address: IMX_ADDRESS,
     });
-
-    pushLog({
-      title: `Updated balance: ${updatedBalance.balance}`,
-    });
   };
 
   const triggerLastTx = async (rootClient: TradingClient, rootWallet: TradingClient) => {
@@ -130,9 +130,6 @@ const TradingPage: React.FC = () => {
     const balance = await client.getBalance({
       owner: ethAddress,
       address: IMX_ADDRESS,
-    });
-    pushLog({
-      title: `Balance: ${balance.balance}`,
     });
     if (!tokenAddress || !tokenId) {
       pushLog({
@@ -171,6 +168,7 @@ const TradingPage: React.FC = () => {
   };
 
   const onStartTrade = async () => {
+    const start = Date.now();
     if (clients.length === 0) return;
 
     // const savedSessionData = [...clients];
@@ -195,9 +193,6 @@ const TradingPage: React.FC = () => {
           const balance = await client.getBalance({
             owner: ethAddress,
             address: IMX_ADDRESS,
-          });
-          pushLog({
-            title: `Balance: ${balance.balance}`,
           });
           if (!tokenAddress || !tokenId) {
             pushLog({
@@ -251,7 +246,7 @@ const TradingPage: React.FC = () => {
         title: 'Turn to execute first address',
       });
 
-      await triggerLastTx(rootClient, rootClient);
+      await triggerLastTx(rootClient, rootWallet);
     } catch (error: any) {
       pushLog({
         title: error.message,
@@ -262,6 +257,11 @@ const TradingPage: React.FC = () => {
         title: 'End session!',
       });
       setIsTradeSubmitting(false);
+      const end = Date.now();
+      pushLog({
+        title: `Execution time: ${end - start} ms`,
+        type: 'success',
+      });
     }
   };
 
