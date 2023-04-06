@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import clsx from 'clsx';
 
 import { createStarkSigner } from '@imtbl/core-sdk';
+import readXlsxFile from 'read-excel-file';
 
 // components
 import Box from '@mui/material/Box';
@@ -16,7 +17,7 @@ import SubmitButton from '../../components/SubmitButton';
 import { getIMXElements } from '../../services/imx.service';
 
 // utils
-import { formatArrayOfKeys, toUsers, etherToWei } from '../../utils/format.util';
+import { etherToWei, fromCsvToUsers } from '../../utils/format.util';
 
 // types
 import { TradingClient } from '../../types/local-storage';
@@ -49,30 +50,26 @@ const TradingPage: React.FC = () => {
 
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = function () {
-      const formattedLines = formatArrayOfKeys(reader.result?.toString(), '\n');
+    const rows = await readXlsxFile(file);
 
-      const formattedUsers = toUsers(formattedLines);
+    const formattedUsers = fromCsvToUsers(rows);
 
-      try {
-        formattedUsers.forEach((user) => {
-          const elements = getIMXElements({
-            walletPrivateKey: user.privateKey,
-          });
-
-          setClients((prev) =>
-            prev.concat({
-              ...elements,
-              ...user,
-            }),
-          );
+    try {
+      formattedUsers.forEach((user) => {
+        const elements = getIMXElements({
+          walletPrivateKey: user.privateKey,
         });
-      } catch (error) {
-        //
-      }
-    };
-    reader.readAsText(file);
+
+        setClients((prev) =>
+          prev.concat({
+            ...elements,
+            ...user,
+          }),
+        );
+      });
+    } catch (error) {
+      //
+    }
 
     event.target.value = '';
   };
@@ -292,7 +289,7 @@ const TradingPage: React.FC = () => {
 
         {clients.length === 0 ? (
           <Box>
-            <input type="file" onChange={onChangeFile} accept=".txt" />
+            <input type="file" onChange={onChangeFile} accept=".csv, .xlsx" />
           </Box>
         ) : (
           <Grid container spacing={4}>
