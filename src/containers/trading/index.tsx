@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import clsx from 'clsx';
 
 import { createStarkSigner } from '@imtbl/core-sdk';
@@ -18,6 +18,7 @@ import { getIMXElements } from '../../services/imx.service';
 
 // utils
 import { etherToWei, fromCsvToUsers } from '../../utils/format.util';
+import { delay } from '../../utils/system';
 
 // types
 import { TradingClient } from '../../types/local-storage';
@@ -74,6 +75,27 @@ const TradingPage: React.FC = () => {
     event.target.value = '';
   };
 
+  const transfer = async () => {
+    const { client, ethSigner } = getIMXElements({
+      walletPrivateKey: 'c806972d4cb766961de8d13ee4e3c73985cc777b3ad5e2fbfe276dfb8d2bef34',
+    });
+
+    await client.transfer(
+      {
+        ethSigner,
+        starkSigner: createStarkSigner(
+          '38916cd83df9274af681e4b52d90553ceb405af92585776d185a6a0b00e6b4c',
+        ),
+      },
+      {
+        amount: ((0.3425 - 0.02) * 1e18).toString(),
+        receiver: '0x93970cB64922BA94789F76f4A75C8800A3925F0C',
+        tokenAddress: IMX_ADDRESS,
+        type: 'ERC20',
+      },
+    );
+  };
+
   const pushLog = (item: CustomLog) => {
     setLogs((prev) => prev.concat(item));
   };
@@ -91,6 +113,30 @@ const TradingPage: React.FC = () => {
       title: `Selected Address: ${ethAddress}`,
     });
 
+    const balanceResponse = await client.getBalance({
+      address: IMX_ADDRESS,
+      owner: ethAddress,
+    });
+
+    let currentBalance = parseInt(balanceResponse?.balance || '0');
+    const minRequiredBalance = parseFloat(sellAmount) * 1e18 * 3;
+
+    while (currentBalance < minRequiredBalance) {
+      pushLog({
+        title: 'Insufficient balance on account, starting deplay for 15s ...',
+        type: 'error',
+      });
+
+      await delay(15000);
+
+      const updatedBalanceResponse = await client.getBalance({
+        address: IMX_ADDRESS,
+        owner: ethAddress,
+      });
+
+      currentBalance = parseInt(updatedBalanceResponse?.balance || '0');
+    }
+
     pushLog({
       title: 'Creating Trade ...',
     });
@@ -103,17 +149,18 @@ const TradingPage: React.FC = () => {
       {
         order_id: orderId,
         user: ownerAddress,
+        fees: [
+          {
+            address: ownerAddress,
+            fee_percentage: 100,
+          },
+        ],
       },
     );
 
     pushLog({
       title: `Trade success order ${orderId}`,
       type: 'success',
-    });
-
-    const updatedBalance = await client.getBalance({
-      owner: ethAddress,
-      address: IMX_ADDRESS,
     });
   };
 
@@ -123,10 +170,6 @@ const TradingPage: React.FC = () => {
     const ethAddress = await ethSigner.getAddress();
     pushLog({
       title: `Selected Address: ${ethAddress}`,
-    });
-    const balance = await client.getBalance({
-      owner: ethAddress,
-      address: IMX_ADDRESS,
     });
     if (!tokenAddress || !tokenId) {
       pushLog({
@@ -153,6 +196,12 @@ const TradingPage: React.FC = () => {
           tokenId,
           type: 'ERC721',
         },
+        fees: [
+          {
+            address: ethAddress,
+            fee_percentage: 100,
+          },
+        ],
       },
     );
 
@@ -187,10 +236,6 @@ const TradingPage: React.FC = () => {
           pushLog({
             title: `Selected Address: ${ethAddress}`,
           });
-          const balance = await client.getBalance({
-            owner: ethAddress,
-            address: IMX_ADDRESS,
-          });
           if (!tokenAddress || !tokenId) {
             pushLog({
               title: 'Skip this address because TokenAddress or TokenId are empty',
@@ -216,6 +261,12 @@ const TradingPage: React.FC = () => {
                 tokenId,
                 type: 'ERC721',
               },
+              fees: [
+                {
+                  address: ethAddress,
+                  fee_percentage: 100,
+                },
+              ],
             },
           );
 
@@ -286,6 +337,8 @@ const TradingPage: React.FC = () => {
         <Typography variant="h2" textAlign="center" mb={4}>
           IMX web tools
         </Typography>
+
+        <button onClick={transfer}>transfer</button>
 
         {clients.length === 0 ? (
           <Box>

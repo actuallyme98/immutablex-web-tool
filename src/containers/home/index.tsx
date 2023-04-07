@@ -23,6 +23,10 @@ const HomePage: React.FC = () => {
       label: 'Trading',
       path: AppRouteEnums.TRADING,
     },
+    {
+      label: 'Explorer',
+      path: AppRouteEnums.EXPLORER,
+    },
   ];
 
   const renderMenuItems = useMemo(() => {

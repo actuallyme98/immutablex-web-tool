@@ -9,6 +9,7 @@ import CssBaseline from '@mui/material/CssBaseline';
 import HomePage from './containers/home';
 import RegisterOffChainPage from './containers/registerOffChain';
 import TradingPage from './containers/trading';
+import ExplorerPage from './containers/explorer';
 
 // styles
 import theme from './styles/theme';
@@ -29,6 +30,10 @@ const MainApp: React.FC = () => {
     {
       path: AppRouteEnums.TRADING,
       element: <TradingPage />,
+    },
+    {
+      path: AppRouteEnums.EXPLORER,
+      element: <ExplorerPage />,
     },
   ]);
 
