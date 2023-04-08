@@ -5,7 +5,12 @@ import clsx from 'clsx';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Grid from '@mui/material/Grid';
+import { ToastContainer, toast } from 'react-toastify';
+import ConnectWallet from './connectWallet';
 import ActionSheets, { SelectedTab } from './actionSheets';
+
+// types
+import { ClientSet, getIMXElements } from '../../services/imx.service';
 
 // styles
 import useStyles from './styles';
@@ -18,21 +23,28 @@ type MenuItem = {
 const ExplorerPage: React.FC = () => {
   const styles = useStyles();
   const [selectedTab, setSelectedTab] = useState<SelectedTab>('transfer');
+  const [connectedWallet, setConnectedWallet] = useState<
+    ClientSet & {
+      starkPk: string;
+    }
+  >();
 
-  const menus: MenuItem[] = [
-    {
-      label: 'transfer',
-      value: 'transfer',
-    },
-    {
-      label: 'getBalance',
-      value: 'getBalance',
-    },
-    {
-      label: 'listAssets',
-      value: 'listAssets',
-    },
-  ];
+  const onConnectWallet = (walletPk: string, starkPk: string) => {
+    try {
+      const clientSet = getIMXElements({
+        walletPrivateKey: walletPk,
+      });
+
+      setConnectedWallet({
+        ...clientSet,
+        starkPk,
+      });
+    } catch (error: any) {
+      toast(error.message, {
+        type: 'error',
+      });
+    }
+  };
 
   const renderLeftMenus = useMemo(() => {
     return menus.map((item, index) => (
@@ -55,6 +67,10 @@ const ExplorerPage: React.FC = () => {
           Explorer
         </Typography>
 
+        <Box mt={8}>
+          <ConnectWallet onConnectWallet={onConnectWallet} />
+        </Box>
+
         <Grid container spacing={4} mt={8}>
           <Grid item xs={4}>
             <div className={styles.leftMenuContainer}>{renderLeftMenus}</div>
@@ -65,8 +81,25 @@ const ExplorerPage: React.FC = () => {
           </Grid>
         </Grid>
       </div>
+
+      <ToastContainer />
     </Box>
   );
 };
 
 export default ExplorerPage;
+
+const menus: MenuItem[] = [
+  {
+    label: 'transfer',
+    value: 'transfer',
+  },
+  {
+    label: 'getBalance',
+    value: 'getBalance',
+  },
+  {
+    label: 'listAssets',
+    value: 'listAssets',
+  },
+];

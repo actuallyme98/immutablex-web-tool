@@ -97,29 +97,29 @@ const TradingPage: React.FC = () => {
       title: `Selected Address: ${ethAddress}`,
     });
 
-    const balanceResponse = await client.getBalance({
-      address: IMX_ADDRESS,
-      owner: ethAddress,
-    });
+    // const balanceResponse = await client.getBalance({
+    //   address: IMX_ADDRESS,
+    //   owner: ethAddress,
+    // });
 
-    let currentBalance = parseInt(balanceResponse?.balance || '0');
-    const minRequiredBalance = parseFloat(sellAmount) * 1e18 * 3;
+    // let currentBalance = parseInt(balanceResponse?.balance || '0');
+    // const minRequiredBalance = parseFloat(sellAmount) * 1e18 * 3;
 
-    while (currentBalance < minRequiredBalance) {
-      pushLog({
-        title: 'Insufficient balance on account, starting deplay for 15s ...',
-        type: 'error',
-      });
+    // while (currentBalance < minRequiredBalance) {
+    //   pushLog({
+    //     title: 'Insufficient balance on account, starting deplay for 15s ...',
+    //     type: 'error',
+    //   });
 
-      await delay(15000);
+    //   await delay(15000);
 
-      const updatedBalanceResponse = await client.getBalance({
-        address: IMX_ADDRESS,
-        owner: ethAddress,
-      });
+    //   const updatedBalanceResponse = await client.getBalance({
+    //     address: IMX_ADDRESS,
+    //     owner: ethAddress,
+    //   });
 
-      currentBalance = parseInt(updatedBalanceResponse?.balance || '0');
-    }
+    //   currentBalance = parseInt(updatedBalanceResponse?.balance || '0');
+    // }
 
     pushLog({
       title: 'Creating Trade ...',
@@ -133,12 +133,12 @@ const TradingPage: React.FC = () => {
       {
         order_id: orderId,
         user: ownerAddress,
-        fees: [
-          {
-            address: ownerAddress,
-            fee_percentage: 100,
-          },
-        ],
+        // fees: [
+        //   {
+        //     address: ownerAddress,
+        //     fee_percentage: 100,
+        //   },
+        // ],
       },
     );
 
@@ -180,12 +180,12 @@ const TradingPage: React.FC = () => {
           tokenId,
           type: 'ERC721',
         },
-        fees: [
-          {
-            address: ethAddress,
-            fee_percentage: 100,
-          },
-        ],
+        // fees: [
+        //   {
+        //     address: ethAddress,
+        //     fee_percentage: 100,
+        //   },
+        // ],
       },
     );
 
@@ -245,12 +245,12 @@ const TradingPage: React.FC = () => {
                 tokenId,
                 type: 'ERC721',
               },
-              fees: [
-                {
-                  address: ethAddress,
-                  fee_percentage: 100,
-                },
-              ],
+              // fees: [
+              //   {
+              //     address: ethAddress,
+              //     fee_percentage: 100,
+              //   },
+              // ],
             },
           );
 
