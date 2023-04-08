@@ -60,11 +60,3 @@ export const fromCsvToUsers = (rows: Row[]): LoadedUser[] => {
     tokenId: row[tokenIdColIndex].toString(),
   }));
 };
-
-export const etherToWei = (value: string) => {
-  const unit = 1e18;
-
-  const result = unit * parseFloat(value);
-
-  return result.toString();
-};

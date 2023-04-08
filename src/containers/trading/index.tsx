@@ -1,8 +1,9 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import clsx from 'clsx';
 
 import { createStarkSigner } from '@imtbl/core-sdk';
 import readXlsxFile from 'read-excel-file';
+import * as ethers from 'ethers';
 
 // components
 import Box from '@mui/material/Box';
@@ -17,7 +18,7 @@ import SubmitButton from '../../components/SubmitButton';
 import { getIMXElements } from '../../services/imx.service';
 
 // utils
-import { etherToWei, fromCsvToUsers } from '../../utils/format.util';
+import { fromCsvToUsers } from '../../utils/format.util';
 import { delay } from '../../utils/system';
 
 // types
@@ -75,29 +76,12 @@ const TradingPage: React.FC = () => {
     event.target.value = '';
   };
 
-  const transfer = async () => {
-    const { client, ethSigner } = getIMXElements({
-      walletPrivateKey: 'c806972d4cb766961de8d13ee4e3c73985cc777b3ad5e2fbfe276dfb8d2bef34',
-    });
-
-    await client.transfer(
-      {
-        ethSigner,
-        starkSigner: createStarkSigner(
-          '38916cd83df9274af681e4b52d90553ceb405af92585776d185a6a0b00e6b4c',
-        ),
-      },
-      {
-        amount: ((0.3425 - 0.02) * 1e18).toString(),
-        receiver: '0x93970cB64922BA94789F76f4A75C8800A3925F0C',
-        tokenAddress: IMX_ADDRESS,
-        type: 'ERC20',
-      },
-    );
-  };
-
   const pushLog = (item: CustomLog) => {
     setLogs((prev) => prev.concat(item));
+  };
+
+  const etherToWei = (amount: string) => {
+    return ethers.parseUnits(amount, 'ether').toString();
   };
 
   const triggerBuy = async (rootUser: TradingClient, orderId: number, ownerAddress: string) => {
@@ -337,8 +321,6 @@ const TradingPage: React.FC = () => {
         <Typography variant="h2" textAlign="center" mb={4}>
           IMX web tools
         </Typography>
-
-        <button onClick={transfer}>transfer</button>
 
         {clients.length === 0 ? (
           <Box>
