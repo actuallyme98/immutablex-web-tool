@@ -11,6 +11,9 @@ import RegisterOffChainPage from './containers/registerOffChain';
 import TradingPage from './containers/trading';
 import ExplorerPage from './containers/explorer';
 
+// contexts
+import { ExplorerContextProvider } from './containers/explorer/contexts';
+
 // styles
 import theme from './styles/theme';
 
@@ -33,7 +36,11 @@ const MainApp: React.FC = () => {
     },
     {
       path: AppRouteEnums.EXPLORER,
-      element: <ExplorerPage />,
+      element: (
+        <ExplorerContextProvider>
+          <ExplorerPage />
+        </ExplorerContextProvider>
+      ),
     },
   ]);
 

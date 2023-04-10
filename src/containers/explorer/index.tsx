@@ -1,16 +1,21 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useContext } from 'react';
 import clsx from 'clsx';
 
 // components
+import { ToastContainer, toast } from 'react-toastify';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Grid from '@mui/material/Grid';
-import { ToastContainer, toast } from 'react-toastify';
+import IconButton from '@mui/material/IconButton';
+import LogoutIcon from '@mui/icons-material/Logout';
 import ConnectWallet from './connectWallet';
 import ActionSheets, { SelectedTab } from './actionSheets';
 
+// contexts
+import { ExplorerContext } from './contexts';
+
 // types
-import { ClientSet, getIMXElements } from '../../services/imx.service';
+import { getIMXElements } from '../../services/imx.service';
 
 // styles
 import useStyles from './styles';
@@ -23,11 +28,8 @@ type MenuItem = {
 const ExplorerPage: React.FC = () => {
   const styles = useStyles();
   const [selectedTab, setSelectedTab] = useState<SelectedTab>('transfer');
-  const [connectedWallet, setConnectedWallet] = useState<
-    ClientSet & {
-      starkPk: string;
-    }
-  >();
+
+  const { connectedWallet, onChangeConnectedWallet } = useContext(ExplorerContext);
 
   const onConnectWallet = (walletPk: string, starkPk: string) => {
     try {
@@ -35,7 +37,7 @@ const ExplorerPage: React.FC = () => {
         walletPrivateKey: walletPk,
       });
 
-      setConnectedWallet({
+      onChangeConnectedWallet({
         ...clientSet,
         starkPk,
       });
@@ -44,6 +46,10 @@ const ExplorerPage: React.FC = () => {
         type: 'error',
       });
     }
+  };
+
+  const onLogout = () => {
+    onChangeConnectedWallet();
   };
 
   const renderLeftMenus = useMemo(() => {
@@ -68,10 +74,20 @@ const ExplorerPage: React.FC = () => {
         </Typography>
 
         <Box mt={8}>
-          <ConnectWallet onConnectWallet={onConnectWallet} />
+          {connectedWallet ? (
+            <Box>
+              <div>Connected wallet: {connectedWallet.wallet.address}</div>
+
+              <IconButton onClick={onLogout}>
+                <LogoutIcon color="error" />
+              </IconButton>
+            </Box>
+          ) : (
+            <ConnectWallet onConnectWallet={onConnectWallet} />
+          )}
         </Box>
 
-        <Grid container spacing={4} mt={8}>
+        <Grid container spacing={4} mt={0}>
           <Grid item xs={4}>
             <div className={styles.leftMenuContainer}>{renderLeftMenus}</div>
           </Grid>
@@ -93,6 +109,14 @@ const menus: MenuItem[] = [
   {
     label: 'transfer',
     value: 'transfer',
+  },
+  {
+    label: 'buy',
+    value: 'buy',
+  },
+  {
+    label: 'sell',
+    value: 'sell',
   },
   {
     label: 'getBalance',

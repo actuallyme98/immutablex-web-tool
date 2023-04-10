@@ -19,7 +19,7 @@ import { getIMXElements } from '../../services/imx.service';
 
 // utils
 import { fromCsvToUsers } from '../../utils/format.util';
-import { delay } from '../../utils/system';
+// import { delay } from '../../utils/system';
 
 // types
 import { TradingClient } from '../../types/local-storage';
@@ -132,7 +132,7 @@ const TradingPage: React.FC = () => {
       },
       {
         order_id: orderId,
-        user: ownerAddress,
+        user: ethAddress,
         // fees: [
         //   {
         //     address: ownerAddress,

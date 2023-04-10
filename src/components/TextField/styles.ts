@@ -1,9 +1,5 @@
 import { makeStyles } from '@mui/styles';
 
-const useStyles = makeStyles({
-  label: {
-    fontSize: 14,
-  },
-});
+const useStyles = makeStyles({});
 
 export default useStyles;

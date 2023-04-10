@@ -44,6 +44,7 @@ const ConnectWallet: React.FC<Props> = (props) => {
           onChange={onChangeWalletPk}
           label="Wallet PK"
           size="small"
+          autoComplete="off"
         />
       </Box>
       <Box mb={2}>
@@ -53,6 +54,7 @@ const ConnectWallet: React.FC<Props> = (props) => {
           onChange={onChangeStarkPk}
           label="Stark PK"
           size="small"
+          autoComplete="off"
         />
       </Box>
       <Box>
