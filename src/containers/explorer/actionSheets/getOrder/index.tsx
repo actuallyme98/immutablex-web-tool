@@ -1,5 +1,4 @@
 import React, { useState, useContext } from 'react';
-import { createStarkSigner, WalletConnection } from '@imtbl/core-sdk';
 
 // components
 import { ToastContainer, toast } from 'react-toastify';
@@ -16,7 +15,7 @@ import { ExplorerContext } from '../../contexts';
 // styles
 import useStyles from './styles';
 
-const BuyTab: React.FC = () => {
+const GetOrderTab: React.FC = () => {
   const [orderId, setOrderId] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const styles = useStyles();
@@ -33,22 +32,13 @@ const BuyTab: React.FC = () => {
     if (!orderIdTrimmed || !connectedWallet) return;
     try {
       setIsSubmitting(true);
-      const { ethSigner, client, starkPk, wallet } = connectedWallet;
-      const ethAddress = await wallet.getAddress();
+      const { client } = connectedWallet;
 
-      const walletConnection: WalletConnection = {
-        ethSigner,
-        starkSigner: createStarkSigner(starkPk),
-      };
-
-      const response = await client.createTrade(walletConnection, {
-        order_id: parseInt(orderIdTrimmed),
-        user: ethAddress,
+      const response = await client.getOrder({
+        id: orderIdTrimmed,
       });
 
-      toast('Trade success!', {
-        type: 'success',
-      });
+      console.log('response', response);
     } catch (error: any) {
       toast(error.message, {
         type: 'error',
@@ -61,7 +51,7 @@ const BuyTab: React.FC = () => {
   return (
     <Box>
       <ToastContainer />
-      <Typography mb={2}>Buy</Typography>
+      <Typography mb={2}>Get Order</Typography>
       <Divider />
       <Grid container spacing={2} mt={0}>
         <Grid item xs={12}>
@@ -83,4 +73,4 @@ const BuyTab: React.FC = () => {
   );
 };
 
-export default BuyTab;
+export default GetOrderTab;

@@ -17,8 +17,16 @@ export const initialValues: FormValues = {
 };
 
 export const validationSchema = Yup.object().shape({
-  collectionAddress: Yup.string().required(),
-  tokenId: Yup.string().required(),
+  collectionAddress: Yup.string().test('check-collection-address', 'Required', function (value) {
+    if (this.parent.type !== 'ERC721') return true;
+
+    return !!value;
+  }),
+  tokenId: Yup.string().test('check-token-id', 'Required', function (value) {
+    if (this.parent.type !== 'ERC721') return true;
+
+    return !!value;
+  }),
   type: Yup.string().required(),
   receiver: Yup.string().required(),
   amount: Yup.string().test('check-type', 'Required', function (value) {

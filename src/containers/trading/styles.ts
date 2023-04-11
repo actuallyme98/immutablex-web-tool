@@ -23,6 +23,9 @@ const useStyles = makeStyles({
   logLineError: {
     color: '#f44336',
   },
+  logLineWarning: {
+    color: '#ffeb3b',
+  },
   amountInput: {
     marginRight: 16,
     '& input::-webkit-inner-spin-button, & input::-webkit-outer-spin-button': {

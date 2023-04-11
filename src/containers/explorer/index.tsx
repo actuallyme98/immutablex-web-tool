@@ -126,4 +126,8 @@ const menus: MenuItem[] = [
     label: 'listAssets',
     value: 'listAssets',
   },
+  {
+    label: 'getOrder',
+    value: 'getOrder',
+  },
 ];

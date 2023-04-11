@@ -6,11 +6,12 @@ import SellTab from './sell';
 import TransferTab from './transfer';
 import GetBalanceTab from './getBalance';
 import ListAssetsTab from './listAssets';
+import GetOrderTab from './getOrder';
 
 // styles
 import useStyles from './styles';
 
-export type SelectedTab = 'transfer' | 'getBalance' | 'listAssets' | 'buy' | 'sell';
+export type SelectedTab = 'transfer' | 'getBalance' | 'listAssets' | 'buy' | 'sell' | 'getOrder';
 
 type Props = {
   selectedTab: SelectedTab;
@@ -30,6 +31,8 @@ const ActionSheets: React.FC<Props> = (props) => {
         return <TransferTab />;
       case 'getBalance':
         return <GetBalanceTab />;
+      case 'getOrder':
+        return <GetOrderTab />;
       case 'listAssets':
       default:
         return <ListAssetsTab />;

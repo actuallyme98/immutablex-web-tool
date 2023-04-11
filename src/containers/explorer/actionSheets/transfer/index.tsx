@@ -52,9 +52,8 @@ const TransferTab: React.FC = () => {
         tokenId: values.tokenId,
       };
 
-      if (!values.amount) return;
-
       if (values.type === 'ERC20') {
+        if (!values.amount) return;
         request = {
           type: 'ERC20',
           amount: etherToWei(values.amount),
@@ -64,6 +63,7 @@ const TransferTab: React.FC = () => {
       }
 
       if (values.type === 'ETH') {
+        if (!values.amount) return;
         request = {
           type: 'ETH',
           amount: etherToWei(values.amount),
@@ -89,7 +89,7 @@ const TransferTab: React.FC = () => {
     validationSchema,
   });
 
-  const { values, handleChange, handleSubmit, isValid, isSubmitting, dirty, setFieldValue } = form;
+  const { values, handleChange, handleSubmit, isValid, isSubmitting, dirty } = form;
 
   return (
     <Box>

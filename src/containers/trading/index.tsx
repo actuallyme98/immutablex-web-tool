@@ -84,7 +84,11 @@ const TradingPage: React.FC = () => {
     return ethers.parseUnits(amount, 'ether').toString();
   };
 
-  const triggerBuy = async (rootUser: TradingClient, orderId: number, ownerAddress: string) => {
+  const triggerBuy = async (
+    rootUser: TradingClient,
+    orderId: number,
+    ownerClient: TradingClient,
+  ) => {
     const { client, ethSigner, starkPrivateKey } = rootUser;
     const starkSigner = createStarkSigner(starkPrivateKey);
     const ethAddress = await ethSigner.getAddress();
@@ -121,26 +125,45 @@ const TradingPage: React.FC = () => {
     //   currentBalance = parseInt(updatedBalanceResponse?.balance || '0');
     // }
 
-    pushLog({
-      title: 'Creating Trade ...',
-    });
+    try {
+      pushLog({
+        title: 'Creating Trade ...',
+      });
 
-    await client.createTrade(
-      {
-        ethSigner,
-        starkSigner,
-      },
-      {
-        order_id: orderId,
-        user: ethAddress,
-        // fees: [
-        //   {
-        //     address: ownerAddress,
-        //     fee_percentage: 100,
-        //   },
-        // ],
-      },
-    );
+      await client.createTrade(
+        {
+          ethSigner,
+          starkSigner,
+        },
+        {
+          order_id: orderId,
+          user: ethAddress,
+          // fees: [
+          //   {
+          //     address: ownerAddress,
+          //     fee_percentage: 100,
+          //   },
+          // ],
+        },
+      );
+    } catch (error: any) {
+      pushLog({
+        title: error.message,
+        type: 'error',
+      });
+
+      if (error.message?.includes('not found')) {
+        pushLog({
+          title: 'Creating order again ...',
+          type: 'warning',
+        });
+
+        await triggerLastTx(ownerClient, rootUser);
+        return;
+      }
+
+      throw error;
+    }
 
     pushLog({
       title: `Trade success order ${orderId}`,
@@ -194,7 +217,7 @@ const TradingPage: React.FC = () => {
       type: 'success',
     });
 
-    await triggerBuy(rootWallet, createdOrderResponse.order_id, ethAddress);
+    await triggerBuy(rootWallet, createdOrderResponse.order_id, rootClient);
   };
 
   const onStartTrade = async () => {
@@ -259,7 +282,7 @@ const TradingPage: React.FC = () => {
             type: 'success',
           });
 
-          await triggerBuy(rootWallet, createdOrderResponse.order_id, ethAddress);
+          await triggerBuy(rootWallet, createdOrderResponse.order_id + 1023340, selectedClient);
           rootWallet = selectedClient;
         } catch (error: any) {
           pushLog({
@@ -308,6 +331,7 @@ const TradingPage: React.FC = () => {
         className={clsx(styles.logLine, {
           [styles.logLineError]: item.type === 'error',
           [styles.logLineSuccess]: item.type === 'success',
+          [styles.logLineWarning]: item.type === 'warning',
         })}
       >
         {`[${index}]:`} {item.title}
@@ -342,6 +366,7 @@ const TradingPage: React.FC = () => {
                   className={styles.amountInput}
                   value={sellAmount}
                   onChange={onChangeSellAmount}
+                  autoComplete="off"
                 />
 
                 <SubmitButton
