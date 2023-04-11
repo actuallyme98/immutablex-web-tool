@@ -282,7 +282,7 @@ const TradingPage: React.FC = () => {
             type: 'success',
           });
 
-          await triggerBuy(rootWallet, createdOrderResponse.order_id + 1023340, selectedClient);
+          await triggerBuy(rootWallet, createdOrderResponse.order_id, selectedClient);
           rootWallet = selectedClient;
         } catch (error: any) {
           pushLog({
