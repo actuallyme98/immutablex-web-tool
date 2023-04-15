@@ -19,7 +19,7 @@ import { getIMXElements } from '../../services/imx.service';
 
 // utils
 import { fromCsvToUsers } from '../../utils/format.util';
-// import { delay } from '../../utils/system';
+import { delay } from '../../utils/system';
 
 // types
 import { TradingClient } from '../../types/local-storage';
@@ -101,29 +101,29 @@ const TradingPage: React.FC = () => {
       title: `Selected Address: ${ethAddress}`,
     });
 
-    // const balanceResponse = await client.getBalance({
-    //   address: IMX_ADDRESS,
-    //   owner: ethAddress,
-    // });
+    const balanceResponse = await client.getBalance({
+      address: IMX_ADDRESS,
+      owner: ethAddress,
+    });
 
-    // let currentBalance = parseInt(balanceResponse?.balance || '0');
-    // const minRequiredBalance = parseFloat(sellAmount) * 1e18 * 3;
+    let currentBalance = parseInt(balanceResponse?.balance || '0');
+    const minRequiredBalance = parseFloat(sellAmount) * 1e18;
 
-    // while (currentBalance < minRequiredBalance) {
-    //   pushLog({
-    //     title: 'Insufficient balance on account, starting deplay for 15s ...',
-    //     type: 'error',
-    //   });
+    while (currentBalance < minRequiredBalance) {
+      pushLog({
+        title: 'Insufficient balance on account, starting deplay for 10s ...',
+        type: 'error',
+      });
 
-    //   await delay(15000);
+      await delay(10000);
 
-    //   const updatedBalanceResponse = await client.getBalance({
-    //     address: IMX_ADDRESS,
-    //     owner: ethAddress,
-    //   });
+      const updatedBalanceResponse = await client.getBalance({
+        address: IMX_ADDRESS,
+        owner: ethAddress,
+      });
 
-    //   currentBalance = parseInt(updatedBalanceResponse?.balance || '0');
-    // }
+      currentBalance = parseInt(updatedBalanceResponse?.balance || '0');
+    }
 
     try {
       pushLog({
