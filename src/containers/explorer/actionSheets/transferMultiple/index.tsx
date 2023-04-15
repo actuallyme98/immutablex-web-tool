@@ -88,6 +88,10 @@ const TransferMultipleTab: React.FC = () => {
     return ethers.parseUnits(unit, 'ether').toString();
   };
 
+  const weiToEther = (unit: string) => {
+    return ethers.formatEther(unit);
+  };
+
   const onSubmitTransfer = async () => {
     try {
       if (clients.length === 0 || !address || !amount) return;
@@ -96,12 +100,24 @@ const TransferMultipleTab: React.FC = () => {
         try {
           const { client, ethSigner, starkPrivateKey, wallet } = selectedClient;
           const starkSigner = createStarkSigner(starkPrivateKey);
+          const ethAddress = await wallet.getAddress();
 
           pushLog({
-            title: `Select address: ${wallet.address}`,
+            title: `Select address: ${ethAddress}`,
           });
+
+          const balanceResponse = await client.getBalance({
+            address: IMX_ADDRESS,
+            owner: ethAddress,
+          });
+          const { balance } = balanceResponse;
+          const ethAmount = weiToEther(balance);
+
+          const transferAmount = parseFloat(ethAmount) - parseFloat(amount);
+          const fixedTransferAmount = transferAmount.toFixed(2);
+
           pushLog({
-            title: `Starting transfer ${amount} IMX to ${address}`,
+            title: `Starting transfer ${fixedTransferAmount} IMX to ${address}`,
           });
 
           await client.transfer(
@@ -111,7 +127,7 @@ const TransferMultipleTab: React.FC = () => {
             },
             {
               receiver: address,
-              amount: etherToWei(amount),
+              amount: etherToWei(fixedTransferAmount),
               type: 'ERC20',
               tokenAddress: IMX_ADDRESS,
             },

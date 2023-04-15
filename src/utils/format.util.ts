@@ -56,7 +56,7 @@ export const fromCsvToUsers = (rows: Row[]): LoadedUser[] => {
   return contentRows.map((row) => ({
     privateKey: row[walletPKColIndex].toString(),
     starkPrivateKey: row[starkPKColIndex].toString(),
-    tokenAddress: row[collectionAddressColIndex].toString(),
-    tokenId: row[tokenIdColIndex].toString(),
+    tokenAddress: row[collectionAddressColIndex]?.toString(),
+    tokenId: row[tokenIdColIndex]?.toString(),
   }));
 };
