@@ -4,6 +4,7 @@ import React, { useMemo } from 'react';
 import BuyTab from './buy';
 import SellTab from './sell';
 import TransferTab from './transfer';
+import TransferMultipleTab from './transferMultiple';
 import GetBalanceTab from './getBalance';
 import ListAssetsTab from './listAssets';
 import GetOrdersTab from './getOrders';
@@ -11,7 +12,14 @@ import GetOrdersTab from './getOrders';
 // styles
 import useStyles from './styles';
 
-export type SelectedTab = 'transfer' | 'getBalance' | 'listAssets' | 'buy' | 'sell' | 'getOrders';
+export type SelectedTab =
+  | 'transfer'
+  | 'transfer-multiple'
+  | 'getBalance'
+  | 'listAssets'
+  | 'buy'
+  | 'sell'
+  | 'getOrders';
 
 type Props = {
   selectedTab: SelectedTab;
@@ -29,6 +37,8 @@ const ActionSheets: React.FC<Props> = (props) => {
         return <SellTab />;
       case 'transfer':
         return <TransferTab />;
+      case 'transfer-multiple':
+        return <TransferMultipleTab />;
       case 'getBalance':
         return <GetBalanceTab />;
       case 'getOrders':

@@ -111,6 +111,10 @@ const menus: MenuItem[] = [
     value: 'transfer',
   },
   {
+    label: 'transferMultiple',
+    value: 'transfer-multiple',
+  },
+  {
     label: 'buy',
     value: 'buy',
   },
