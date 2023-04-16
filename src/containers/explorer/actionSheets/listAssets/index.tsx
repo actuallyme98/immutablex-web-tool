@@ -1,5 +1,5 @@
 import React, { useContext, useMemo, useState } from 'react';
-import { AssetWithOrders } from '@imtbl/core-sdk';
+import { AssetWithOrders, createStarkSigner } from '@imtbl/core-sdk';
 
 // components
 import { ToastContainer, toast } from 'react-toastify';
@@ -7,11 +7,16 @@ import Grid from '@mui/material/Grid';
 import Box from '@mui/material/Box';
 import Divider from '@mui/material/Divider';
 import Typography from '@mui/material/Typography';
+import SendIcon from '@mui/icons-material/Send';
 import SubmitButton from '../../../../components/SubmitButton';
 import TextField from '../../../../components/TextField';
+import TransferNFTDialog from './transferNFTDialog';
 
 // contexts
 import { ExplorerContext } from '../../contexts';
+
+// utils
+import { compareAddresses } from '../../../../utils/string';
 
 // styles
 import useStyles from './styles';
@@ -20,6 +25,7 @@ const ListAssetsTab: React.FC = () => {
   const [address, setAddress] = useState('');
   const [assets, setAssets] = useState<AssetWithOrders[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedNFT, setOpenSelectedNFT] = useState<AssetWithOrders>();
   const styles = useStyles();
 
   const { connectedWallet } = useContext(ExplorerContext);
@@ -51,7 +57,52 @@ const ListAssetsTab: React.FC = () => {
     setAddress(value);
   };
 
+  const onOpenTransferNFTDialog = (asset: AssetWithOrders) => {
+    setOpenSelectedNFT(asset);
+  };
+
+  const onCloseTransferNFTDialog = () => {
+    setOpenSelectedNFT(undefined);
+  };
+
+  const onSubmitTransferNFT = async (receiver: string) => {
+    if (!connectedWallet || !selectedNFT) return;
+
+    try {
+      const { client, wallet, ethSigner, starkPk } = connectedWallet;
+      const { token_address, token_id } = selectedNFT;
+
+      const ethAddress = await wallet.getAddress();
+      await client.transfer(
+        {
+          ethSigner,
+          starkSigner: createStarkSigner(starkPk),
+        },
+        {
+          type: 'ERC721',
+          tokenAddress: token_address,
+          tokenId: token_id,
+          receiver,
+        },
+      );
+
+      const response = await client.listAssets({
+        user: address.trim() || ethAddress,
+      });
+
+      setAssets(response.result);
+    } catch (error: any) {
+      toast(error.message, {
+        type: 'success',
+      });
+    } finally {
+      onCloseTransferNFTDialog();
+    }
+  };
+
   const renderAssets = useMemo(() => {
+    const ownerAddress = connectedWallet?.wallet.address || '';
+
     return assets.map((item, index) => (
       <Box key={index} className={styles.assetItem}>
         <Box>
@@ -63,13 +114,30 @@ const ListAssetsTab: React.FC = () => {
           <div className={styles.assetName}>{item.name}</div>
           <div className={styles.assetId}>#{item.token_id}</div>
         </Box>
+
+        {compareAddresses(ownerAddress, item.user) && (
+          <div
+            className={styles.transferLayerContainer}
+            onClick={() => onOpenTransferNFTDialog(item)}
+          >
+            <SendIcon />
+          </div>
+        )}
       </Box>
     ));
-  }, [assets]);
+  }, [assets, connectedWallet?.wallet.address]);
 
   return (
     <Box>
       <ToastContainer />
+      {selectedNFT && (
+        <TransferNFTDialog
+          open
+          onClose={onCloseTransferNFTDialog}
+          onSubmit={onSubmitTransferNFT}
+          asset={selectedNFT}
+        />
+      )}
       <Typography mb={2}>List Assets</Typography>
       <Divider />
       <Grid container spacing={2} mt={0}>

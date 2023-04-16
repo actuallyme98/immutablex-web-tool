@@ -16,12 +16,15 @@ const useStyles = makeStyles({
     border: '1px solid #d1d1d1',
     borderRadius: 4,
     marginRight: 8,
+    position: 'relative',
+    '&:hover $transferLayerContainer': {
+      opacity: 1,
+    },
   },
   assetImg: {
     width: '100%',
     height: '100%',
-    borderTopLeftRadius: 4,
-    borderTopRightRadius: 4,
+    borderRadius: 4,
   },
   assetCollectionName: {
     fontSize: 13,
@@ -47,6 +50,20 @@ const useStyles = makeStyles({
   assetId: {
     fontSize: 12,
     fontWeight: 600,
+  },
+  transferLayerContainer: {
+    position: 'absolute',
+    width: '100%',
+    height: '100%',
+    background: 'rgba(0,0,0,0.6)',
+    borderRadius: 4,
+    top: 0,
+    opacity: 0,
+    transition: '0.3s',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
 
