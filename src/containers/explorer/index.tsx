@@ -17,7 +17,7 @@ import ActionSheets, { SelectedTab } from './actionSheets';
 import { ExplorerContext } from './contexts';
 
 // utils
-import { randomString } from '../../utils/string';
+import { randomString, toShortAddress } from '../../utils/string';
 
 // types
 import { getIMXElements } from '../../services/imx.service';
@@ -66,7 +66,7 @@ const ExplorerPage: React.FC = () => {
   const renderLoadedClients = useMemo(() => {
     return clients.map((client, index) => (
       <MenuItem value={client.id} key={index}>
-        {client.walletName || client.wallet.address}
+        {`${client.walletName} (${toShortAddress(client.wallet.address)})`}
       </MenuItem>
     ));
   }, [clients]);
