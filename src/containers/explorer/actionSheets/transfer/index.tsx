@@ -29,20 +29,20 @@ import useStyles from './styles';
 const TransferTab: React.FC = () => {
   const styles = useStyles();
 
-  const { connectedWallet } = useContext(ExplorerContext);
+  const { selectedClient } = useContext(ExplorerContext);
 
   const etherToWei = (amount: string) => {
     return ethers.parseUnits(amount, 'ether').toString();
   };
 
   const onSubmit = async (values: FormValues) => {
-    if (!connectedWallet) return;
+    if (!selectedClient) return;
 
     try {
-      const { client, ethSigner, starkPk } = connectedWallet;
+      const { client, ethSigner, starkPrivateKey } = selectedClient;
       const walletConnection: WalletConnection = {
         ethSigner,
-        starkSigner: createStarkSigner(starkPk),
+        starkSigner: createStarkSigner(starkPrivateKey),
       };
 
       let request: UnsignedTransferRequest = {
@@ -140,7 +140,7 @@ const TransferTab: React.FC = () => {
 
           <Grid item xs={12}>
             <SubmitButton
-              disabled={!isValid || !dirty || isSubmitting || !connectedWallet}
+              disabled={!isValid || !dirty || isSubmitting || !selectedClient}
               isLoading={isSubmitting}
               type="submit"
             >

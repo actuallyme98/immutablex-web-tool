@@ -1,7 +1,9 @@
 import { makeStyles } from '@mui/styles';
 
 const useStyles = makeStyles({
-  root: {},
+  root: {
+    display: 'flex',
+  },
   inputContainer: {
     minWidth: 400,
   },

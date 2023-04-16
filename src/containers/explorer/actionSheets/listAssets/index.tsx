@@ -28,14 +28,14 @@ const ListAssetsTab: React.FC = () => {
   const [selectedNFT, setOpenSelectedNFT] = useState<AssetWithOrders>();
   const styles = useStyles();
 
-  const { connectedWallet } = useContext(ExplorerContext);
+  const { selectedClient } = useContext(ExplorerContext);
 
   const onSubmit = async () => {
-    if (!connectedWallet) return;
+    if (!selectedClient) return;
 
     try {
       setIsSubmitting(true);
-      const { client, wallet } = connectedWallet;
+      const { client, wallet } = selectedClient;
       const ethAddress = await wallet.getAddress();
 
       const response = await client.listAssets({
@@ -66,17 +66,17 @@ const ListAssetsTab: React.FC = () => {
   };
 
   const onSubmitTransferNFT = async (receiver: string) => {
-    if (!connectedWallet || !selectedNFT) return;
+    if (!selectedClient || !selectedNFT) return;
 
     try {
-      const { client, wallet, ethSigner, starkPk } = connectedWallet;
+      const { client, wallet, ethSigner, starkPrivateKey } = selectedClient;
       const { token_address, token_id } = selectedNFT;
 
       const ethAddress = await wallet.getAddress();
       await client.transfer(
         {
           ethSigner,
-          starkSigner: createStarkSigner(starkPk),
+          starkSigner: createStarkSigner(starkPrivateKey),
         },
         {
           type: 'ERC721',
@@ -101,7 +101,7 @@ const ListAssetsTab: React.FC = () => {
   };
 
   const renderAssets = useMemo(() => {
-    const ownerAddress = connectedWallet?.wallet.address || '';
+    const ownerAddress = selectedClient?.wallet.address || '';
 
     return assets.map((item, index) => (
       <Box key={index} className={styles.assetItem}>
@@ -125,7 +125,7 @@ const ListAssetsTab: React.FC = () => {
         )}
       </Box>
     ));
-  }, [assets, connectedWallet?.wallet.address]);
+  }, [assets, selectedClient?.wallet.address]);
 
   return (
     <Box>
@@ -151,7 +151,7 @@ const ListAssetsTab: React.FC = () => {
         <Grid item xs={12}>
           <SubmitButton
             onClick={onSubmit}
-            disabled={isSubmitting || !connectedWallet}
+            disabled={isSubmitting || !selectedClient}
             isLoading={isSubmitting}
           >
             Submit

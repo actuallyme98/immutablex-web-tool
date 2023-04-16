@@ -30,7 +30,7 @@ const GetOrdersTab: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const styles = useStyles();
 
-  const { connectedWallet } = useContext(ExplorerContext);
+  const { selectedClient } = useContext(ExplorerContext);
 
   const onChangeAddress = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value;
@@ -39,10 +39,10 @@ const GetOrdersTab: React.FC = () => {
 
   const onSubmit = async () => {
     const addressTrimmed = address.trim();
-    if (!connectedWallet) return;
+    if (!selectedClient) return;
     try {
       setIsSubmitting(true);
-      const { client, wallet } = connectedWallet;
+      const { client, wallet } = selectedClient;
       const etherAddress = await wallet.getAddress();
 
       const response = await client.listOrders({
@@ -62,17 +62,17 @@ const GetOrdersTab: React.FC = () => {
 
   const onDeleteOrder = async (orderId: number) => {
     try {
-      if (!connectedWallet) return;
+      if (!selectedClient) return;
 
       const answer = confirm('Are you sure to cancel this order?');
 
       if (!answer) return;
       setIsSubmitting(true);
-      const { client, ethSigner, starkPk } = connectedWallet;
+      const { client, ethSigner, starkPrivateKey } = selectedClient;
       await client.cancelOrder(
         {
           ethSigner,
-          starkSigner: createStarkSigner(starkPk),
+          starkSigner: createStarkSigner(starkPrivateKey),
         },
         {
           order_id: orderId,
@@ -168,7 +168,7 @@ const GetOrdersTab: React.FC = () => {
 
         <Grid item xs={12}>
           <SubmitButton
-            disabled={isSubmitting || !connectedWallet}
+            disabled={isSubmitting || !selectedClient}
             isLoading={isSubmitting}
             onClick={onSubmit}
           >

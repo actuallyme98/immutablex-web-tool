@@ -8,4 +8,5 @@ export enum CsvFormattedKeyEnums {
   STARK_PRIVATE_KEY = 'stark_private_key',
   COLLECTION_ADDRESS = 'collection_address',
   TOKEN_ID = 'token_id',
+  WALLET_NAME = 'wallet_name',
 }

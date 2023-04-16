@@ -8,11 +8,16 @@ import Typography from '@mui/material/Typography';
 import Grid from '@mui/material/Grid';
 import IconButton from '@mui/material/IconButton';
 import LogoutIcon from '@mui/icons-material/Logout';
+import Select, { SelectChangeEvent } from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
 import ConnectWallet from './connectWallet';
 import ActionSheets, { SelectedTab } from './actionSheets';
 
 // contexts
 import { ExplorerContext } from './contexts';
+
+// utils
+import { randomString } from '../../utils/string';
 
 // types
 import { getIMXElements } from '../../services/imx.service';
@@ -29,7 +34,7 @@ const ExplorerPage: React.FC = () => {
   const styles = useStyles();
   const [selectedTab, setSelectedTab] = useState<SelectedTab>('transfer');
 
-  const { connectedWallet, onChangeConnectedWallet } = useContext(ExplorerContext);
+  const { selectedClient, onSetSelectedClient, clients } = useContext(ExplorerContext);
 
   const onConnectWallet = (walletPk: string, starkPk: string) => {
     try {
@@ -37,9 +42,10 @@ const ExplorerPage: React.FC = () => {
         walletPrivateKey: walletPk,
       });
 
-      onChangeConnectedWallet({
+      onSetSelectedClient({
         ...clientSet,
-        starkPk,
+        starkPrivateKey: starkPk,
+        id: randomString(),
       });
     } catch (error: any) {
       toast(error.message, {
@@ -49,8 +55,21 @@ const ExplorerPage: React.FC = () => {
   };
 
   const onLogout = () => {
-    onChangeConnectedWallet();
+    onSetSelectedClient();
   };
+
+  const onChangeSelectedClient = (event: SelectChangeEvent<string>) => {
+    const existClient = clients.find((client) => client.id === event.target.value);
+    onSetSelectedClient(existClient);
+  };
+
+  const renderLoadedClients = useMemo(() => {
+    return clients.map((client, index) => (
+      <MenuItem value={client.id} key={index}>
+        {client.walletName || client.wallet.address}
+      </MenuItem>
+    ));
+  }, [clients]);
 
   const renderLeftMenus = useMemo(() => {
     return menus.map((item, index) => (
@@ -74,9 +93,23 @@ const ExplorerPage: React.FC = () => {
         </Typography>
 
         <Box mt={8}>
-          {connectedWallet ? (
+          {selectedClient ? (
             <Box>
-              <div>Connected wallet: {connectedWallet.wallet.address}</div>
+              <div>
+                {clients.length > 0 ? (
+                  <Box>
+                    <Select
+                      size="small"
+                      value={selectedClient.id}
+                      onChange={onChangeSelectedClient}
+                    >
+                      {renderLoadedClients}
+                    </Select>
+                  </Box>
+                ) : (
+                  <div>Connected wallet: {selectedClient.wallet.address}</div>
+                )}
+              </div>
 
               <IconButton onClick={onLogout}>
                 <LogoutIcon color="error" />

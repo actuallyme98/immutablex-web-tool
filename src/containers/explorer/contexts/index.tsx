@@ -1,35 +1,43 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 import React, { useState } from 'react';
 
-import { ClientSet } from '../../../services/imx.service';
-
-export type ConnectedWallet = ClientSet & {
-  starkPk: string;
-};
+// types
+import { ConnectedWallet } from '../../../types/local-storage';
 
 type ExplorerContextState = {
-  connectedWallet?: ConnectedWallet;
-  onChangeConnectedWallet: (connectedWallet?: ConnectedWallet) => void;
+  selectedClient?: ConnectedWallet;
+  onSetSelectedClient: (client?: ConnectedWallet) => void;
+  clients: ConnectedWallet[];
+  onSetClients: (clients: ConnectedWallet[]) => void;
 };
 
 const initialState: ExplorerContextState = {
-  onChangeConnectedWallet: () => {},
+  onSetSelectedClient: () => {},
+  clients: [],
+  onSetClients: () => {},
 };
 
 export const ExplorerContext = React.createContext<ExplorerContextState>(initialState);
 
 export const ExplorerContextProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
-  const [connectedWallet, setConnectedWallet] = useState<ConnectedWallet>();
+  const [selectedClient, setSelectedClient] = useState<ConnectedWallet>();
+  const [clients, setClients] = useState<ConnectedWallet[]>([]);
 
-  const onChangeConnectedWallet = (newConnectedWallet?: ConnectedWallet) => {
-    setConnectedWallet(newConnectedWallet);
+  const onSetSelectedClient = (newClient?: ConnectedWallet) => {
+    setSelectedClient(newClient);
+  };
+
+  const onSetClients = (newClients: ConnectedWallet[]) => {
+    setClients(newClients);
   };
 
   return (
     <ExplorerContext.Provider
       value={{
-        connectedWallet,
-        onChangeConnectedWallet,
+        selectedClient,
+        onSetSelectedClient,
+        clients,
+        onSetClients,
       }}
     >
       {children}

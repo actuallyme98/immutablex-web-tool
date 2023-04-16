@@ -17,6 +17,7 @@ export const fromTxtToUsers = (lines: string[]) => {
       starkPrivateKey: formattedUser[1],
       tokenAddress: formattedUser[2],
       tokenId: formattedUser[3],
+      walletName: formattedUser[4],
     });
   }
 
@@ -36,6 +37,9 @@ export const fromCsvToUsers = (rows: Row[]): LoadedUser[] => {
     (label) => label === CsvFormattedKeyEnums.COLLECTION_ADDRESS,
   );
   let tokenIdColIndex = headerRow.findIndex((label) => label === CsvFormattedKeyEnums.TOKEN_ID);
+  let walletNameColIndex = headerRow.findIndex(
+    (label) => label === CsvFormattedKeyEnums.WALLET_NAME,
+  );
 
   if (walletPKColIndex < 0) {
     walletPKColIndex = 0;
@@ -53,10 +57,15 @@ export const fromCsvToUsers = (rows: Row[]): LoadedUser[] => {
     tokenIdColIndex = 3;
   }
 
+  if (walletNameColIndex < 0) {
+    walletNameColIndex = 4;
+  }
+
   return contentRows.map((row) => ({
     privateKey: row[walletPKColIndex].toString(),
     starkPrivateKey: row[starkPKColIndex].toString(),
     tokenAddress: row[collectionAddressColIndex]?.toString(),
     tokenId: row[tokenIdColIndex]?.toString(),
+    walletName: row[walletNameColIndex]?.toString(),
   }));
 };

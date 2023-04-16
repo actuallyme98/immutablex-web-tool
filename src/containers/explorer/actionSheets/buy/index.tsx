@@ -21,7 +21,7 @@ const BuyTab: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const styles = useStyles();
 
-  const { connectedWallet } = useContext(ExplorerContext);
+  const { selectedClient } = useContext(ExplorerContext);
 
   const onChangeOrderId = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value;
@@ -30,15 +30,15 @@ const BuyTab: React.FC = () => {
 
   const onSubmit = async () => {
     const orderIdTrimmed = orderId.trim();
-    if (!orderIdTrimmed || !connectedWallet) return;
+    if (!orderIdTrimmed || !selectedClient) return;
     try {
       setIsSubmitting(true);
-      const { ethSigner, client, starkPk, wallet } = connectedWallet;
+      const { ethSigner, client, starkPrivateKey, wallet } = selectedClient;
       const ethAddress = await wallet.getAddress();
 
       const walletConnection: WalletConnection = {
         ethSigner,
-        starkSigner: createStarkSigner(starkPk),
+        starkSigner: createStarkSigner(starkPrivateKey),
       };
 
       const response = await client.createTrade(walletConnection, {
@@ -71,7 +71,7 @@ const BuyTab: React.FC = () => {
 
         <Grid item xs={12}>
           <SubmitButton
-            disabled={isSubmitting || !orderId.trim() || !connectedWallet}
+            disabled={isSubmitting || !orderId.trim() || !selectedClient}
             isLoading={isSubmitting}
             onClick={onSubmit}
           >

@@ -24,18 +24,18 @@ const GetBalanceTab: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const styles = useStyles();
 
-  const { connectedWallet } = useContext(ExplorerContext);
+  const { selectedClient } = useContext(ExplorerContext);
 
   const weiToEther = (amount: string) => {
     return ethers.formatEther(amount);
   };
 
   const onSubmit = async () => {
-    if (!connectedWallet) return;
+    if (!selectedClient) return;
 
     try {
       setIsSubmitting(true);
-      const { client, wallet } = connectedWallet;
+      const { client, wallet } = selectedClient;
       const ethAddress = await wallet.getAddress();
 
       const response = await client.getBalance({
@@ -62,7 +62,7 @@ const GetBalanceTab: React.FC = () => {
         <Grid item xs={12}>
           <SubmitButton
             onClick={onSubmit}
-            disabled={!connectedWallet || isSubmitting}
+            disabled={!selectedClient || isSubmitting}
             isLoading={isSubmitting}
           >
             Submit
