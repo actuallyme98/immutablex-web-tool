@@ -1,12 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { AssetWithOrders } from '@imtbl/core-sdk';
 
 // components
-import { ToastContainer, toast } from 'react-toastify';
 import Box from '@mui/material/Box';
 import Dialog from '@mui/material/Dialog';
+import Autocomplete from '@mui/material/Autocomplete';
 import TextField from '../../../../../components/TextField';
 import SubmitButton from '../../../../../components/SubmitButton';
+
+// contexts
+import { ExplorerContext } from '../../../contexts';
+
+// utils
+import { toShortAddress } from '../../../../../utils/string';
 
 // styles
 import useStyles from './styles';
@@ -24,8 +30,11 @@ const TransferNFTDialog: React.FC<Props> = (props) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const styles = useStyles();
 
+  const { clients } = useContext(ExplorerContext);
+
   const onChangeAddress = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value;
+    console.log('value', value);
     setAddress(value);
   };
 
@@ -50,7 +59,34 @@ const TransferNFTDialog: React.FC<Props> = (props) => {
 
         <Box mt={2}>
           <label className={styles.label}>Receiver</label>
-          <TextField value={address} onChange={onChangeAddress} />
+          <Autocomplete
+            freeSolo
+            options={clients.map((client) => {
+              const ethAddress = client.wallet.address;
+
+              return {
+                id: client.id,
+                address: ethAddress,
+                walletName: `${client.walletName} (${toShortAddress(ethAddress)})`,
+              };
+            })}
+            onChange={(_, option) => {
+              if (typeof option === 'string' || !option) {
+                return;
+              }
+              setAddress(option.address);
+            }}
+            getOptionLabel={(option) => {
+              if (typeof option === 'string') {
+                return option;
+              }
+              return option.walletName || option.address;
+            }}
+            renderInput={(params) => (
+              <TextField {...params} value={address} onChange={onChangeAddress} />
+            )}
+            size="small"
+          />
         </Box>
 
         <Box mt={2}>

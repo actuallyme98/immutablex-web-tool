@@ -93,7 +93,7 @@ const ListAssetsTab: React.FC = () => {
       setAssets(response.result);
     } catch (error: any) {
       toast(error.message, {
-        type: 'success',
+        type: 'error',
       });
     } finally {
       onCloseTransferNFTDialog();

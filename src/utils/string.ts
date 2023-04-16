@@ -11,3 +11,12 @@ export const randomString = (length = 8) => {
   }
   return result;
 };
+
+export const toShortAddress = (address: string) => {
+  const length = address.length;
+
+  const first4 = address.substring(0, 6);
+  const last4 = address.substring(length - 4);
+
+  return `${first4}...${last4}`;
+};
