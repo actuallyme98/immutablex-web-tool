@@ -1700,15 +1700,14 @@
   resolved "https://registry.yarnpkg.com/@humanwhocodes/object-schema/-/object-schema-1.2.1.tgz#b520529ec21d8e5945a1851dfd1c32e94e39ff45"
   integrity sha512-ZnQMnLV4e7hDlUvw8H+U8ASL02SS2Gn6+9Ac3wGGLIe7+je2AeAOxPY+izIPJDfFDb7eDjev0Us8MO1iFRN8hA==
 
-"@imtbl/core-sdk@^1.0.0", "@imtbl/core-sdk@^1.0.1":
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/@imtbl/core-sdk/-/core-sdk-1.0.1.tgz#718b47209d021ab14dd758621985827dcb9fd940"
-  integrity sha512-+uwUIgnDcq2bFDY70soK/m8Grd/sZBnAvnskTxTTaKC4ppq/sy+CYu5m1XzmwSoqExbqHmXrwoLeargwFZ/EYg==
+"@imtbl/core-sdk@^2.1.0":
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/@imtbl/core-sdk/-/core-sdk-2.1.0.tgz#b21202dc5ab55cfcb9a1ad302703506e1bd472f9"
+  integrity sha512-RuFaQLCi/p+fWhshcrqhNK6DWd/hTwhp/EyMAePHFxLhDAWGDbuBGKxTRLcHzYmrDcOowDavps7q8o8DqBDVVQ==
   dependencies:
     "@ethersproject/abi" "^5.0.0"
     "@ethersproject/bytes" "^5.0.0"
     "@ethersproject/providers" "^5.0.0"
-    "@imtbl/core-sdk" "^1.0.0"
     axios "^0.26.1"
     bn.js "^5.2.0"
     elliptic "^6.5.4"
@@ -7857,7 +7856,12 @@ node-forge@^1:
   resolved "https://registry.yarnpkg.com/node-forge/-/node-forge-1.3.1.tgz#be8da2af243b2417d5f646a770663a92b7e9ded3"
   integrity sha512-dPEtOeMvF9VMcYV/1Wb8CPoVAXtp6MKMlcbAt4ddqmGqUJ6fQZFXkNZNkNlfevtNkGtaSoXf/vNNNSvgrdXwtA==
 
-node-gyp-build@^4.2.0, node-gyp-build@^4.3.0:
+node-gyp-build@^4.2.0:
+  version "4.6.1"
+  resolved "https://registry.yarnpkg.com/node-gyp-build/-/node-gyp-build-4.6.1.tgz#24b6d075e5e391b8d5539d98c7fc5c210cac8a3e"
+  integrity sha512-24vnklJmyRS8ViBNI8KbtK/r/DmXQMRiOMXTNz2nrTnAYUwjmEEbnnpB/+kt+yWRv73bPsSPRFddrcIbAxSiMQ==
+
+node-gyp-build@^4.3.0:
   version "4.6.0"
   resolved "https://registry.yarnpkg.com/node-gyp-build/-/node-gyp-build-4.6.0.tgz#0c52e4cbf54bbd28b709820ef7b6a3c2d6209055"
   integrity sha512-NTZVKn9IylLwUzaKjkas1e4u2DLNcV4rdYagA4PWdPwW87Bi7z+BznyKSRwS/761tV/lzCGXplWsiaMjLqP2zQ==
