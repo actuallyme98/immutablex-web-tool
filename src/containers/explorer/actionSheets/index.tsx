@@ -8,12 +8,14 @@ import TransferMultipleTab from './transferMultiple';
 import GetBalanceTab from './getBalance';
 import ListAssetsTab from './listAssets';
 import GetOrdersTab from './getOrders';
+import TransferNFTMultipleTab from './transferNFTmultiple';
 
 // styles
 import useStyles from './styles';
 
 export type SelectedTab =
   | 'transfer'
+  | 'transfer-nft-multiple'
   | 'transfer-multiple'
   | 'getBalance'
   | 'listAssets'
@@ -43,6 +45,8 @@ const ActionSheets: React.FC<Props> = (props) => {
         return <GetBalanceTab />;
       case 'getOrders':
         return <GetOrdersTab />;
+      case 'transfer-nft-multiple':
+        return <TransferNFTMultipleTab />;
       case 'listAssets':
       default:
         return <ListAssetsTab />;

@@ -40,6 +40,9 @@ export const fromCsvToUsers = (rows: Row[]): LoadedUser[] => {
   let walletNameColIndex = headerRow.findIndex(
     (label) => label === CsvFormattedKeyEnums.WALLET_NAME,
   );
+  let targetwalletIndex = headerRow.findIndex(
+    (label) => label === CsvFormattedKeyEnums.TARGET_WALLET,
+  );
 
   if (walletPKColIndex < 0) {
     walletPKColIndex = 0;
@@ -61,11 +64,16 @@ export const fromCsvToUsers = (rows: Row[]): LoadedUser[] => {
     walletNameColIndex = 4;
   }
 
+  if (targetwalletIndex < 0) {
+    targetwalletIndex = 5;
+  }
+
   return contentRows.map((row) => ({
     privateKey: row[walletPKColIndex].toString(),
     starkPrivateKey: row[starkPKColIndex].toString(),
     tokenAddress: row[collectionAddressColIndex]?.toString(),
     tokenId: row[tokenIdColIndex]?.toString(),
     walletName: row[walletNameColIndex]?.toString(),
+    targetWallet: row[targetwalletIndex]?.toString(),
   }));
 };

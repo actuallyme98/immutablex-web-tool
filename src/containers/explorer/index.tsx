@@ -144,6 +144,10 @@ const menus: MenuItem[] = [
     value: 'transfer',
   },
   {
+    label: 'transferNFTMultiple',
+    value: 'transfer-nft-multiple',
+  },
+  {
     label: 'transferMultiple',
     value: 'transfer-multiple',
   },

@@ -11,6 +11,7 @@ export type LoadedUser = {
   tokenAddress?: string;
   tokenId?: string;
   walletName?: string;
+  targetWallet?: string;
 };
 
 export type TradingClient = LoadedUser & ClientSet;
