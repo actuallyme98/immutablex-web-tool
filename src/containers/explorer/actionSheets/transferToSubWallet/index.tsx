@@ -34,11 +34,10 @@ type CustomLog = {
   type?: 'error' | 'info' | 'warning' | 'success';
 };
 
-const TransferMultipleTab: React.FC = () => {
+const TransferToSubWalletsTab: React.FC = () => {
   const [clients, setClients] = useState<TradingClient[]>([]);
   const [logs, setLogs] = useState<CustomLog[]>([]);
   const [amount, setAmount] = useState('');
-  const [address, setAddress] = useState('');
   const [isTradeSubmitting, setIsTradeSubmitting] = useState(false);
 
   const styles = useStyles();
@@ -75,11 +74,6 @@ const TransferMultipleTab: React.FC = () => {
     setAmount(value);
   };
 
-  const onChangeAddress = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const value = event.target.value;
-    setAddress(value);
-  };
-
   const pushLog = (item: CustomLog) => {
     setLogs((prev) => prev.concat(item));
   };
@@ -94,11 +88,11 @@ const TransferMultipleTab: React.FC = () => {
 
   const onSubmitTransfer = async () => {
     try {
-      if (clients.length === 0 || !address || !amount) return;
+      if (clients.length === 0 || !amount) return;
 
       for (const selectedClient of clients) {
         try {
-          const { client, ethSigner, starkPrivateKey, wallet } = selectedClient;
+          const { client, ethSigner, starkPrivateKey, wallet, targetWallet } = selectedClient;
           const starkSigner = createStarkSigner(starkPrivateKey);
           const ethAddress = await wallet.getAddress();
 
@@ -106,18 +100,16 @@ const TransferMultipleTab: React.FC = () => {
             title: `Select address: ${ethAddress}`,
           });
 
-          const balanceResponse = await client.getBalance({
-            address: IMX_ADDRESS,
-            owner: ethAddress,
-          });
-          const { balance } = balanceResponse;
-          const ethAmount = weiToEther(balance);
-
-          const transferAmount = parseFloat(ethAmount) - parseFloat(amount);
-          const fixedTransferAmount = transferAmount.toFixed(2);
+          if (!targetWallet) {
+            pushLog({
+              title: `Missing target_wallet`,
+              type: 'warning',
+            });
+            continue;
+          }
 
           pushLog({
-            title: `Starting transfer ${fixedTransferAmount} IMX to ${address}`,
+            title: `Starting transfer ${amount} IMX to ${targetWallet}`,
           });
 
           await client.transfer(
@@ -126,8 +118,8 @@ const TransferMultipleTab: React.FC = () => {
               starkSigner,
             },
             {
-              receiver: address,
-              amount: etherToWei(fixedTransferAmount),
+              receiver: targetWallet,
+              amount: etherToWei(amount),
               type: 'ERC20',
               tokenAddress: IMX_ADDRESS,
             },
@@ -180,7 +172,7 @@ const TransferMultipleTab: React.FC = () => {
   return (
     <Box>
       <ToastContainer />
-      <Typography mb={2}>Transfer Multiple</Typography>
+      <Typography mb={2}>Transfer to sub wallets</Typography>
       <Divider />
       <Grid container spacing={2} mt={0}>
         <Grid item xs={12}>
@@ -193,18 +185,13 @@ const TransferMultipleTab: React.FC = () => {
         </Grid>
 
         <Grid item xs={12}>
-          <label className={styles.label}>Receiver</label>
-          <TextField name="receiver" value={address} onChange={onChangeAddress} />
-        </Grid>
-
-        <Grid item xs={12}>
           <Divider />
         </Grid>
 
         <Grid item xs={12}>
           <SubmitButton
             onClick={onSubmitTransfer}
-            disabled={clients.length === 0 || !address || !amount || isTradeSubmitting}
+            disabled={clients.length === 0 || !amount || isTradeSubmitting}
             isLoading={isTradeSubmitting}
           >
             Submit
@@ -221,4 +208,4 @@ const TransferMultipleTab: React.FC = () => {
   );
 };
 
-export default TransferMultipleTab;
+export default TransferToSubWalletsTab;

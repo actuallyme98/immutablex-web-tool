@@ -148,8 +148,12 @@ const menus: MenuItem[] = [
     value: 'transfer-nft-multiple',
   },
   {
-    label: 'transferMultiple',
-    value: 'transfer-multiple',
+    label: 'transferToMainWallet',
+    value: 'transfer-to-main-wallet',
+  },
+  {
+    label: 'transferToSubWallets',
+    value: 'transfer-to-sub-wallets',
   },
   {
     label: 'buy',

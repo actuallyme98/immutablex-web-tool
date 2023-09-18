@@ -4,7 +4,8 @@ import React, { useMemo } from 'react';
 import BuyTab from './buy';
 import SellTab from './sell';
 import TransferTab from './transfer';
-import TransferMultipleTab from './transferMultiple';
+import TransferToMainWalletTab from './transferToMainWallet';
+import TransferToSubWalletsTab from './transferToSubWallet';
 import GetBalanceTab from './getBalance';
 import ListAssetsTab from './listAssets';
 import GetOrdersTab from './getOrders';
@@ -16,7 +17,8 @@ import useStyles from './styles';
 export type SelectedTab =
   | 'transfer'
   | 'transfer-nft-multiple'
-  | 'transfer-multiple'
+  | 'transfer-to-main-wallet'
+  | 'transfer-to-sub-wallets'
   | 'getBalance'
   | 'listAssets'
   | 'buy'
@@ -39,8 +41,10 @@ const ActionSheets: React.FC<Props> = (props) => {
         return <SellTab />;
       case 'transfer':
         return <TransferTab />;
-      case 'transfer-multiple':
-        return <TransferMultipleTab />;
+      case 'transfer-to-main-wallet':
+        return <TransferToMainWalletTab />;
+      case 'transfer-to-sub-wallets':
+        return <TransferToSubWalletsTab />;
       case 'getBalance':
         return <GetBalanceTab />;
       case 'getOrders':
