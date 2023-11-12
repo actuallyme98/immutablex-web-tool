@@ -115,7 +115,7 @@ const TradingPage: React.FC = () => {
         type: 'error',
       });
 
-      await delay(10000);
+      await delay(5000);
 
       const updatedBalanceResponse = await client.getBalance({
         address: IMX_ADDRESS,
