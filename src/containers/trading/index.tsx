@@ -111,7 +111,7 @@ const TradingPage: React.FC = () => {
 
     while (currentBalance < minRequiredBalance) {
       pushLog({
-        title: 'Insufficient balance on account, starting deplay for 10s ...',
+        title: 'Insufficient balance on account, starting deplay for 4s ...',
         type: 'error',
       });
 
