@@ -1,5 +1,4 @@
 import React, { useMemo, useContext, useState } from 'react';
-import { createStarkSigner, WalletConnection } from '@imtbl/core-sdk';
 import * as ethers from 'ethers';
 
 // components
@@ -41,32 +40,30 @@ const SellTab: React.FC = () => {
     if (!selectedClient) return;
 
     try {
-      const { client, ethSigner, starkPrivateKey } = selectedClient;
-      const walletConnection: WalletConnection = {
-        ethSigner,
-        starkSigner: createStarkSigner(starkPrivateKey),
-      };
+      const { service } = selectedClient;
 
-      const response = await client.createOrder(walletConnection, {
-        buy: {
-          amount: etherToWei(values.amount),
-          tokenAddress: IMX_ADDRESS,
-          type: 'ERC20',
+      const response = await service.sell({
+        request: {
+          buy: {
+            amount: etherToWei(values.amount),
+            tokenAddress: IMX_ADDRESS,
+            type: 'ERC20',
+          },
+          sell: {
+            tokenAddress: values.collectionAddress,
+            tokenId: values.tokenId,
+            type: 'ERC721',
+          },
+          fees: values.fees.map((item) => ({
+            address: item.address,
+            fee_percentage: parseFloat(item.fee_percentage),
+          })),
         },
-        sell: {
-          tokenAddress: values.collectionAddress,
-          tokenId: values.tokenId,
-          type: 'ERC721',
-        },
-        fees: values.fees.map((item) => ({
-          address: item.address,
-          fee_percentage: parseFloat(item.fee_percentage),
-        })),
       });
 
       setOrderId(response.order_id.toString());
     } catch (error: any) {
-      toast(error.message, {
+      toast(error?.response?.data?.message || error.message, {
         type: 'error',
       });
     }

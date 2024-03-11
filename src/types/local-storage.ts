@@ -1,4 +1,5 @@
 import { ClientSet } from '../services/imx.service';
+import { ImmutableService } from '../services';
 
 export type StarkPrivateKeyWithAddress = {
   address: string;
@@ -16,8 +17,14 @@ export type LoadedUser = {
 
 export type TradingClient = LoadedUser & ClientSet;
 
-export type ConnectedWallet = ClientSet & {
+export type TradingService = LoadedUser & {
+  service: ImmutableService;
+};
+
+export type ConnectedService = {
   id: string;
+  service: ImmutableService;
+  privateKey: string;
   starkPrivateKey: string;
   walletName?: string;
 };

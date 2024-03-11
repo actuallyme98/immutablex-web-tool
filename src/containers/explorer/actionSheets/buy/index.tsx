@@ -1,5 +1,4 @@
 import React, { useState, useContext } from 'react';
-import { createStarkSigner, WalletConnection } from '@imtbl/core-sdk';
 
 // components
 import { ToastContainer, toast } from 'react-toastify';
@@ -33,24 +32,19 @@ const BuyTab: React.FC = () => {
     if (!orderIdTrimmed || !selectedClient) return;
     try {
       setIsSubmitting(true);
-      const { ethSigner, client, starkPrivateKey, wallet } = selectedClient;
-      const ethAddress = await wallet.getAddress();
+      const { service } = selectedClient;
 
-      const walletConnection: WalletConnection = {
-        ethSigner,
-        starkSigner: createStarkSigner(starkPrivateKey),
-      };
-
-      const response = await client.createTrade(walletConnection, {
-        order_id: parseInt(orderIdTrimmed),
-        user: ethAddress,
+      await service.buy({
+        request: {
+          order_id: parseInt(orderIdTrimmed),
+        },
       });
 
       toast('Trade success!', {
         type: 'success',
       });
     } catch (error: any) {
-      toast(error.message, {
+      toast(error?.response?.data?.message || error.message, {
         type: 'error',
       });
     } finally {

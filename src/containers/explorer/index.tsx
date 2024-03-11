@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useContext } from 'react';
+import React, { useMemo, useState, useContext, useEffect } from 'react';
 import clsx from 'clsx';
 
 // components
@@ -13,14 +13,17 @@ import MenuItem from '@mui/material/MenuItem';
 import ConnectWallet from './connectWallet';
 import ActionSheets, { SelectedTab } from './actionSheets';
 
+import { useSelector } from 'react-redux';
+import { sSelectedNetwork } from '../../redux/selectors/app.selector';
+
 // contexts
 import { ExplorerContext } from './contexts';
 
 // utils
 import { randomString, toShortAddress } from '../../utils/string';
 
-// types
-import { getIMXElements } from '../../services/imx.service';
+// services
+import { ImmutableService } from '../../services';
 
 // styles
 import useStyles from './styles';
@@ -33,20 +36,24 @@ type MenuItem = {
 const ExplorerPage: React.FC = () => {
   const styles = useStyles();
   const [selectedTab, setSelectedTab] = useState<SelectedTab>('transfer');
+  const selectedNetwork = useSelector(sSelectedNetwork);
 
-  const { selectedClient, onSetSelectedClient, clients } = useContext(ExplorerContext);
+  const { selectedClient, onSetSelectedClient, clients, onSetClients } =
+    useContext(ExplorerContext);
 
   const onConnectWallet = (walletPk: string, starkPk: string) => {
     try {
-      const clientSet = getIMXElements({
-        walletPrivateKey: walletPk,
-      });
+      const service = new ImmutableService(selectedNetwork, walletPk, starkPk);
 
-      onSetSelectedClient({
-        ...clientSet,
-        starkPrivateKey: starkPk,
+      const newClient = {
         id: randomString(),
-      });
+        service,
+        privateKey: walletPk,
+        starkPrivateKey: starkPk,
+      };
+
+      onSetSelectedClient(newClient);
+      onSetClients([newClient]);
     } catch (error: any) {
       toast(error.message, {
         type: 'error',
@@ -66,7 +73,7 @@ const ExplorerPage: React.FC = () => {
   const renderLoadedClients = useMemo(() => {
     return clients.map((client, index) => (
       <MenuItem value={client.id} key={index}>
-        {`${client.walletName} (${toShortAddress(client.wallet.address)})`}
+        {`${client.walletName || '-'} (${toShortAddress(client.service.getAddress())})`}
       </MenuItem>
     ));
   }, [clients]);
@@ -84,6 +91,15 @@ const ExplorerPage: React.FC = () => {
       </div>
     ));
   }, [menus, selectedTab]);
+
+  useEffect(() => {
+    onSetClients(
+      clients.map((client) => ({
+        ...client,
+        service: new ImmutableService(selectedNetwork, client.privateKey, client.starkPrivateKey),
+      })),
+    );
+  }, [selectedNetwork]);
 
   return (
     <Box className={styles.root}>
@@ -107,7 +123,7 @@ const ExplorerPage: React.FC = () => {
                     </Select>
                   </Box>
                 ) : (
-                  <div>Connected wallet: {selectedClient.wallet.address}</div>
+                  <div>Connected wallet: {selectedClient.service.getAddress()}</div>
                 )}
               </div>
 

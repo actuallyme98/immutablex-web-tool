@@ -1,5 +1,5 @@
 import React, { useContext } from 'react';
-import { createStarkSigner, WalletConnection, UnsignedTransferRequest } from '@imtbl/core-sdk';
+import { UnsignedTransferRequest } from '@imtbl/core-sdk';
 import * as ethers from 'ethers';
 
 // components
@@ -39,11 +39,7 @@ const TransferTab: React.FC = () => {
     if (!selectedClient) return;
 
     try {
-      const { client, ethSigner, starkPrivateKey } = selectedClient;
-      const walletConnection: WalletConnection = {
-        ethSigner,
-        starkSigner: createStarkSigner(starkPrivateKey),
-      };
+      const { service } = selectedClient;
 
       let request: UnsignedTransferRequest = {
         type: 'ERC721',
@@ -71,13 +67,13 @@ const TransferTab: React.FC = () => {
         };
       }
 
-      const response = await client.transfer(walletConnection, request);
+      await service.transfer({ request });
 
       toast('Transfer success!', {
         type: 'success',
       });
     } catch (error: any) {
-      toast(error.message, {
+      toast(error?.response?.data?.message || error.message, {
         type: 'error',
       });
     }

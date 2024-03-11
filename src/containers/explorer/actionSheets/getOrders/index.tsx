@@ -1,5 +1,5 @@
 import React, { useState, useContext, useMemo } from 'react';
-import { Order, createStarkSigner } from '@imtbl/core-sdk';
+import { Order } from '@imtbl/core-sdk';
 import * as ethers from 'ethers';
 
 // components
@@ -42,13 +42,9 @@ const GetOrdersTab: React.FC = () => {
     if (!selectedClient) return;
     try {
       setIsSubmitting(true);
-      const { client, wallet } = selectedClient;
-      const etherAddress = await wallet.getAddress();
+      const { service } = selectedClient;
 
-      const response = await client.listOrders({
-        user: addressTrimmed || etherAddress,
-        status: 'active',
-      });
+      const response = await service.getOrders(addressTrimmed);
 
       setOrders(response.result);
     } catch (error: any) {
@@ -68,20 +64,12 @@ const GetOrdersTab: React.FC = () => {
 
       if (!answer) return;
       setIsSubmitting(true);
-      const { client, ethSigner, starkPrivateKey } = selectedClient;
-      await client.cancelOrder(
-        {
-          ethSigner,
-          starkSigner: createStarkSigner(starkPrivateKey),
-        },
-        {
-          order_id: orderId,
-        },
-      );
+      const { service } = selectedClient;
+      await service.cancelOrder(orderId);
 
       await onSubmit();
     } catch (error: any) {
-      toast(error.message, {
+      toast(error?.response?.data?.message || error.message, {
         type: 'error',
       });
     } finally {

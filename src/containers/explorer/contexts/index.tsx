@@ -2,13 +2,13 @@
 import React, { useState } from 'react';
 
 // types
-import { ConnectedWallet } from '../../../types/local-storage';
+import { ConnectedService } from '../../../types/local-storage';
 
 type ExplorerContextState = {
-  selectedClient?: ConnectedWallet;
-  onSetSelectedClient: (client?: ConnectedWallet) => void;
-  clients: ConnectedWallet[];
-  onSetClients: (clients: ConnectedWallet[]) => void;
+  selectedClient?: ConnectedService;
+  onSetSelectedClient: (client?: ConnectedService) => void;
+  clients: ConnectedService[];
+  onSetClients: (clients: ConnectedService[]) => void;
 };
 
 const initialState: ExplorerContextState = {
@@ -20,15 +20,18 @@ const initialState: ExplorerContextState = {
 export const ExplorerContext = React.createContext<ExplorerContextState>(initialState);
 
 export const ExplorerContextProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
-  const [selectedClient, setSelectedClient] = useState<ConnectedWallet>();
-  const [clients, setClients] = useState<ConnectedWallet[]>([]);
+  const [selectedClient, setSelectedClient] = useState<ConnectedService>();
+  const [clients, setClients] = useState<ConnectedService[]>([]);
 
-  const onSetSelectedClient = (newClient?: ConnectedWallet) => {
+  const onSetSelectedClient = (newClient?: ConnectedService) => {
     setSelectedClient(newClient);
   };
 
-  const onSetClients = (newClients: ConnectedWallet[]) => {
+  const onSetClients = (newClients: ConnectedService[]) => {
     setClients(newClients);
+    setSelectedClient(
+      newClients.find((c) => c.privateKey === selectedClient?.privateKey) || newClients[0],
+    );
   };
 
   return (

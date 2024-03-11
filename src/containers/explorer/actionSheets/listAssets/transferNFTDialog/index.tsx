@@ -62,7 +62,7 @@ const TransferNFTDialog: React.FC<Props> = (props) => {
           <Autocomplete
             freeSolo
             options={clients.map((client) => {
-              const ethAddress = client.wallet.address;
+              const ethAddress = client.service.getAddress();
 
               return {
                 id: client.id,

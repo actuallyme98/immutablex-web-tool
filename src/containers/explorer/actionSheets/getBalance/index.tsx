@@ -35,17 +35,13 @@ const GetBalanceTab: React.FC = () => {
 
     try {
       setIsSubmitting(true);
-      const { client, wallet } = selectedClient;
-      const ethAddress = await wallet.getAddress();
+      const { service } = selectedClient;
 
-      const response = await client.getBalance({
-        address: IMX_ADDRESS,
-        owner: ethAddress,
-      });
+      const response = await service.getBalance();
 
       setBalance(response.balance);
     } catch (error: any) {
-      toast(error.message, {
+      toast(error?.response?.data?.message || error.message, {
         type: 'error',
       });
     } finally {

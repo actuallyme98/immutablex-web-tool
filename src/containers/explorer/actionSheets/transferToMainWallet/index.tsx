@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import clsx from 'clsx';
 
-import { createStarkSigner } from '@imtbl/core-sdk';
 import readXlsxFile from 'read-excel-file';
 import * as ethers from 'ethers';
 
@@ -14,8 +13,11 @@ import Typography from '@mui/material/Typography';
 import SubmitButton from '../../../../components/SubmitButton';
 import TextField from '../../../../components/TextField';
 
+import { useSelector } from 'react-redux';
+import { sSelectedNetwork } from '../../../../redux/selectors/app.selector';
+
 // services
-import { getIMXElements } from '../../../../services/imx.service';
+import { ImmutableService } from '../../../../services';
 
 // utils
 import { fromCsvToUsers } from '../../../../utils/format.util';
@@ -24,7 +26,7 @@ import { fromCsvToUsers } from '../../../../utils/format.util';
 import { IMX_ADDRESS } from '../../../../constants/imx';
 
 // types
-import { TradingClient } from '../../../../types/local-storage';
+import { TradingService } from '../../../../types/local-storage';
 
 // styles
 import useStyles from './styles';
@@ -35,10 +37,12 @@ type CustomLog = {
 };
 
 const TransferToMainWalletTab: React.FC = () => {
-  const [clients, setClients] = useState<TradingClient[]>([]);
+  const [clients, setClients] = useState<TradingService[]>([]);
   const [logs, setLogs] = useState<CustomLog[]>([]);
   const [address, setAddress] = useState('');
   const [isTradeSubmitting, setIsTradeSubmitting] = useState(false);
+
+  const selectedNetwork = useSelector(sSelectedNetwork);
 
   const styles = useStyles();
 
@@ -53,13 +57,15 @@ const TransferToMainWalletTab: React.FC = () => {
 
     try {
       formattedUsers.forEach((user) => {
-        const elements = getIMXElements({
-          walletPrivateKey: user.privateKey,
-        });
+        const service = new ImmutableService(
+          selectedNetwork,
+          user.privateKey,
+          user.starkPrivateKey,
+        );
 
         setClients((prev) =>
           prev.concat({
-            ...elements,
+            service,
             ...user,
           }),
         );
@@ -92,18 +98,14 @@ const TransferToMainWalletTab: React.FC = () => {
 
       for (const selectedClient of clients) {
         try {
-          const { client, ethSigner, starkPrivateKey, wallet } = selectedClient;
-          const starkSigner = createStarkSigner(starkPrivateKey);
-          const ethAddress = await wallet.getAddress();
+          const { service } = selectedClient;
+          const ethAddress = service.getAddress();
 
           pushLog({
             title: `Select address: ${ethAddress}`,
           });
 
-          const balanceResponse = await client.getBalance({
-            address: IMX_ADDRESS,
-            owner: ethAddress,
-          });
+          const balanceResponse = await service.getBalance(ethAddress);
           const { balance } = balanceResponse;
           const ethAmount = weiToEther(balance);
 
@@ -111,18 +113,14 @@ const TransferToMainWalletTab: React.FC = () => {
             title: `Starting transfer ${ethAmount} IMX to ${address}`,
           });
 
-          await client.transfer(
-            {
-              ethSigner,
-              starkSigner,
-            },
-            {
+          await service.transfer({
+            request: {
               receiver: address,
               amount: etherToWei(ethAmount),
               type: 'ERC20',
               tokenAddress: IMX_ADDRESS,
             },
-          );
+          });
 
           pushLog({
             title: 'Transfer success!',

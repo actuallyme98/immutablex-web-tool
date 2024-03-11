@@ -6,6 +6,7 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import CssBaseline from '@mui/material/CssBaseline';
 
 // components
+import Layout from './components/Layout';
 import HomePage from './containers/home';
 import RegisterOffChainPage from './containers/registerOffChain';
 import TradingPage from './containers/trading';
@@ -24,23 +25,29 @@ const MainApp: React.FC = () => {
   const router = createBrowserRouter([
     {
       path: AppRouteEnums.HOME,
-      element: <HomePage />,
-    },
-    {
-      path: AppRouteEnums.REGISTER_OFF_CHAIN,
-      element: <RegisterOffChainPage />,
-    },
-    {
-      path: AppRouteEnums.TRADING,
-      element: <TradingPage />,
-    },
-    {
-      path: AppRouteEnums.EXPLORER,
-      element: (
-        <ExplorerContextProvider>
-          <ExplorerPage />
-        </ExplorerContextProvider>
-      ),
+      element: <Layout />,
+      children: [
+        {
+          index: true,
+          element: <HomePage />,
+        },
+        {
+          path: AppRouteEnums.REGISTER_OFF_CHAIN,
+          element: <RegisterOffChainPage />,
+        },
+        {
+          path: AppRouteEnums.TRADING,
+          element: <TradingPage />,
+        },
+        {
+          path: AppRouteEnums.EXPLORER,
+          element: (
+            <ExplorerContextProvider>
+              <ExplorerPage />
+            </ExplorerContextProvider>
+          ),
+        },
+      ],
     },
   ]);
 

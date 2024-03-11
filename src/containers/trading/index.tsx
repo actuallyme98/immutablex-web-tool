@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import clsx from 'clsx';
 
 import { createStarkSigner } from '@imtbl/core-sdk';
@@ -14,15 +14,18 @@ import Grid from '@mui/material/Grid';
 import TextField from '@mui/material/TextField';
 import SubmitButton from '../../components/SubmitButton';
 
+import { useSelector } from 'react-redux';
+import { sSelectedNetwork } from '../../redux/selectors/app.selector';
+
 // services
-import { getIMXElements } from '../../services/imx.service';
+import { ImmutableService } from '../../services';
 
 // utils
 import { fromCsvToUsers } from '../../utils/format.util';
 import { delay } from '../../utils/system';
 
 // types
-import { TradingClient } from '../../types/local-storage';
+import { TradingService } from '../../types/local-storage';
 
 // consts
 import { IMX_ADDRESS } from '../../constants/imx';
@@ -37,10 +40,12 @@ type CustomLog = {
 
 const TradingPage: React.FC = () => {
   const styles = useStyles();
-  const [clients, setClients] = useState<TradingClient[]>([]);
+  const [clients, setClients] = useState<TradingService[]>([]);
   const [logs, setLogs] = useState<CustomLog[]>([]);
   const [sellAmount, setSellAmount] = useState('');
   const [isTradeSubmitting, setIsTradeSubmitting] = useState(false);
+
+  const selectedNetwork = useSelector(sSelectedNetwork);
 
   const onChangeSellAmount = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value;
@@ -58,13 +63,15 @@ const TradingPage: React.FC = () => {
 
     try {
       formattedUsers.forEach((user) => {
-        const elements = getIMXElements({
-          walletPrivateKey: user.privateKey,
-        });
+        const service = new ImmutableService(
+          selectedNetwork,
+          user.privateKey,
+          user.starkPrivateKey,
+        );
 
         setClients((prev) =>
           prev.concat({
-            ...elements,
+            service,
             ...user,
           }),
         );
@@ -85,13 +92,12 @@ const TradingPage: React.FC = () => {
   };
 
   const triggerBuy = async (
-    rootUser: TradingClient,
+    rootUser: TradingService,
     orderId: number,
-    ownerClient: TradingClient,
+    ownerClient: TradingService,
   ) => {
-    const { client, ethSigner, starkPrivateKey } = rootUser;
-    const starkSigner = createStarkSigner(starkPrivateKey);
-    const ethAddress = await ethSigner.getAddress();
+    const { service } = rootUser;
+    const ethAddress = service.getAddress();
 
     pushLog({
       title: `Delected exist order ${orderId}`,
@@ -101,10 +107,7 @@ const TradingPage: React.FC = () => {
       title: `Selected Address: ${ethAddress}`,
     });
 
-    const balanceResponse = await client.getBalance({
-      address: IMX_ADDRESS,
-      owner: ethAddress,
-    });
+    const balanceResponse = await service.getBalance(ethAddress);
 
     let currentBalance = parseInt(balanceResponse?.balance || '0');
     const minRequiredBalance = parseFloat(sellAmount) * 1e18;
@@ -117,10 +120,7 @@ const TradingPage: React.FC = () => {
 
       await delay(4000);
 
-      const updatedBalanceResponse = await client.getBalance({
-        address: IMX_ADDRESS,
-        owner: ethAddress,
-      });
+      const updatedBalanceResponse = await service.getBalance(ethAddress);
 
       currentBalance = parseInt(updatedBalanceResponse?.balance || '0');
     }
@@ -130,12 +130,8 @@ const TradingPage: React.FC = () => {
         title: 'Creating Trade ...',
       });
 
-      await client.createTrade(
-        {
-          ethSigner,
-          starkSigner,
-        },
-        {
+      await service.buy({
+        request: {
           order_id: orderId,
           user: ethAddress,
           // fees: [
@@ -145,7 +141,7 @@ const TradingPage: React.FC = () => {
           //   },
           // ],
         },
-      );
+      });
     } catch (error: any) {
       pushLog({
         title: error.message,
@@ -171,10 +167,9 @@ const TradingPage: React.FC = () => {
     });
   };
 
-  const triggerLastTx = async (rootClient: TradingClient, rootWallet: TradingClient) => {
-    const { client, ethSigner, starkPrivateKey, tokenAddress, tokenId } = rootClient;
-    const starkSigner = createStarkSigner(starkPrivateKey);
-    const ethAddress = await ethSigner.getAddress();
+  const triggerLastTx = async (rootClient: TradingService, rootWallet: TradingService) => {
+    const { service, starkPrivateKey, tokenAddress, tokenId } = rootClient;
+    const ethAddress = service.getAddress();
     pushLog({
       title: `Selected Address: ${ethAddress}`,
     });
@@ -187,12 +182,8 @@ const TradingPage: React.FC = () => {
     pushLog({
       title: `Creating Order ...`,
     });
-    const createdOrderResponse = await client.createOrder(
-      {
-        ethSigner,
-        starkSigner,
-      },
-      {
+    const createdOrderResponse = await service.sell({
+      request: {
         buy: {
           amount: etherToWei(sellAmount),
           type: 'ERC20',
@@ -210,7 +201,7 @@ const TradingPage: React.FC = () => {
         //   },
         // ],
       },
-    );
+    });
 
     pushLog({
       title: `Created order success with order id ${createdOrderResponse.order_id}`,
@@ -233,13 +224,12 @@ const TradingPage: React.FC = () => {
         title: 'Start session ...',
       });
 
-      let rootWallet: TradingClient = rootClient;
+      let rootWallet: TradingService = rootClient;
 
       for (const selectedClient of restClients) {
         try {
-          const { client, ethSigner, starkPrivateKey, tokenAddress, tokenId } = selectedClient;
-          const starkSigner = createStarkSigner(starkPrivateKey);
-          const ethAddress = await ethSigner.getAddress();
+          const { service, starkPrivateKey, tokenAddress, tokenId } = selectedClient;
+          const ethAddress = service.getAddress();
           pushLog({
             title: `Selected Address: ${ethAddress}`,
           });
@@ -252,12 +242,8 @@ const TradingPage: React.FC = () => {
           pushLog({
             title: `Creating Order ...`,
           });
-          const createdOrderResponse = await client.createOrder(
-            {
-              ethSigner,
-              starkSigner,
-            },
-            {
+          const createdOrderResponse = await service.sell({
+            request: {
               buy: {
                 amount: etherToWei(sellAmount),
                 type: 'ERC20',
@@ -275,7 +261,7 @@ const TradingPage: React.FC = () => {
               //   },
               // ],
             },
-          );
+          });
 
           pushLog({
             title: `Created order success with order id ${createdOrderResponse.order_id}`,
@@ -321,7 +307,7 @@ const TradingPage: React.FC = () => {
   };
 
   const renderClients = useMemo(() => {
-    return clients.map((item, index) => <Alert key={index}>{item.wallet.address}</Alert>);
+    return clients.map((item, index) => <Alert key={index}>{item.service.getAddress()}</Alert>);
   }, [clients]);
 
   const renderLogs = useMemo(() => {
@@ -338,6 +324,15 @@ const TradingPage: React.FC = () => {
       </code>
     ));
   }, [logs]);
+
+  useEffect(() => {
+    setClients(
+      clients.map((client) => ({
+        ...client,
+        service: new ImmutableService(selectedNetwork, client.privateKey, client.starkPrivateKey),
+      })),
+    );
+  }, [selectedNetwork]);
 
   return (
     <Box className={styles.root}>

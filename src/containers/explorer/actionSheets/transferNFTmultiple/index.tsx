@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import clsx from 'clsx';
 
-import { createStarkSigner } from '@imtbl/core-sdk';
 import readXlsxFile from 'read-excel-file';
 
 // comonents
@@ -11,19 +10,18 @@ import Box from '@mui/material/Box';
 import Divider from '@mui/material/Divider';
 import Typography from '@mui/material/Typography';
 import SubmitButton from '../../../../components/SubmitButton';
-import TextField from '../../../../components/TextField';
+
+import { useSelector } from 'react-redux';
+import { sSelectedNetwork } from '../../../../redux/selectors/app.selector';
 
 // services
-import { getIMXElements } from '../../../../services/imx.service';
+import { ImmutableService } from '../../../../services';
 
 // utils
 import { fromCsvToUsers } from '../../../../utils/format.util';
 
-// consts
-import { IMX_ADDRESS } from '../../../../constants/imx';
-
 // types
-import { TradingClient } from '../../../../types/local-storage';
+import { TradingService } from '../../../../types/local-storage';
 
 // styles
 import useStyles from './styles';
@@ -34,9 +32,11 @@ type CustomLog = {
 };
 
 const TransferNFTMultipleTab: React.FC = () => {
-  const [clients, setClients] = useState<TradingClient[]>([]);
+  const [clients, setClients] = useState<TradingService[]>([]);
   const [logs, setLogs] = useState<CustomLog[]>([]);
   const [isTradeSubmitting, setIsTradeSubmitting] = useState(false);
+
+  const selectedNetwork = useSelector(sSelectedNetwork);
 
   const styles = useStyles();
 
@@ -51,13 +51,15 @@ const TransferNFTMultipleTab: React.FC = () => {
 
     try {
       formattedUsers.forEach((user) => {
-        const elements = getIMXElements({
-          walletPrivateKey: user.privateKey,
-        });
+        const service = new ImmutableService(
+          selectedNetwork,
+          user.privateKey,
+          user.starkPrivateKey,
+        );
 
         setClients((prev) =>
           prev.concat({
-            ...elements,
+            service,
             ...user,
           }),
         );
@@ -77,17 +79,8 @@ const TransferNFTMultipleTab: React.FC = () => {
 
       for (const selectedClient of clients) {
         try {
-          const {
-            client,
-            ethSigner,
-            starkPrivateKey,
-            wallet,
-            targetWallet,
-            tokenAddress,
-            tokenId,
-          } = selectedClient;
-          const starkSigner = createStarkSigner(starkPrivateKey);
-          const ethAddress = await wallet.getAddress();
+          const { service, targetWallet, tokenAddress, tokenId } = selectedClient;
+          const ethAddress = service.getAddress();
 
           if (!targetWallet || !tokenId || !tokenAddress) {
             pushLog({
@@ -105,18 +98,14 @@ const TransferNFTMultipleTab: React.FC = () => {
             title: `Starting transfer ${tokenId} in collection address ${tokenAddress} to ${targetWallet}`,
           });
 
-          await client.transfer(
-            {
-              ethSigner,
-              starkSigner,
-            },
-            {
+          await service.transfer({
+            request: {
               type: 'ERC721',
               receiver: targetWallet,
               tokenAddress,
               tokenId,
             },
-          );
+          });
 
           pushLog({
             title: 'Transfer success!',

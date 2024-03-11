@@ -1,5 +1,5 @@
 import React, { useContext, useMemo, useState } from 'react';
-import { AssetWithOrders, createStarkSigner } from '@imtbl/core-sdk';
+import { AssetWithOrders } from '@imtbl/core-sdk';
 
 // components
 import { ToastContainer, toast } from 'react-toastify';
@@ -35,16 +35,13 @@ const ListAssetsTab: React.FC = () => {
 
     try {
       setIsSubmitting(true);
-      const { client, wallet } = selectedClient;
-      const ethAddress = await wallet.getAddress();
+      const { service } = selectedClient;
 
-      const response = await client.listAssets({
-        user: address.trim() || ethAddress,
-      });
+      const response = await service.getAssets(address.trim());
 
       setAssets(response.result);
     } catch (error: any) {
-      toast(error.message, {
+      toast(error?.response?.data?.message || error.message, {
         type: 'error',
       });
     } finally {
@@ -69,30 +66,23 @@ const ListAssetsTab: React.FC = () => {
     if (!selectedClient || !selectedNFT) return;
 
     try {
-      const { client, wallet, ethSigner, starkPrivateKey } = selectedClient;
+      const { service } = selectedClient;
       const { token_address, token_id } = selectedNFT;
 
-      const ethAddress = await wallet.getAddress();
-      await client.transfer(
-        {
-          ethSigner,
-          starkSigner: createStarkSigner(starkPrivateKey),
-        },
-        {
+      await service.transfer({
+        request: {
           type: 'ERC721',
           tokenAddress: token_address,
           tokenId: token_id,
           receiver,
         },
-      );
-
-      const response = await client.listAssets({
-        user: address.trim() || ethAddress,
       });
+
+      const response = await service.getAssets(address.trim());
 
       setAssets(response.result);
     } catch (error: any) {
-      toast(error.message, {
+      toast(error?.response?.data?.message || error.message, {
         type: 'error',
       });
     } finally {
@@ -101,7 +91,7 @@ const ListAssetsTab: React.FC = () => {
   };
 
   const renderAssets = useMemo(() => {
-    const ownerAddress = selectedClient?.wallet.address || '';
+    const ownerAddress = selectedClient?.service?.getAddress() || '';
 
     return assets.map((item, index) => (
       <Box key={index} className={styles.assetItem}>
@@ -125,7 +115,7 @@ const ListAssetsTab: React.FC = () => {
         )}
       </Box>
     ));
-  }, [assets, selectedClient?.wallet.address]);
+  }, [assets, selectedClient]);
 
   return (
     <Box>

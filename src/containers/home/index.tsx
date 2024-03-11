@@ -1,8 +1,8 @@
 import React, { useMemo } from 'react';
+import { Link } from 'react-router-dom';
 
 // components
 import Box from '@mui/material/Box';
-import Link from '@mui/material/Link';
 import Typography from '@mui/material/Typography';
 
 // enums
@@ -32,7 +32,9 @@ const HomePage: React.FC = () => {
   const renderMenuItems = useMemo(() => {
     return listMenuItems.map((item, index) => (
       <li key={index}>
-        <Link href={item.path}>{item.label}</Link>
+        <Link to={item.path} className={styles.link}>
+          {item.label}
+        </Link>
       </li>
     ));
   }, [listMenuItems]);

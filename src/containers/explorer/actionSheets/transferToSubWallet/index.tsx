@@ -1,12 +1,11 @@
 import React, { useState, useMemo } from 'react';
 import clsx from 'clsx';
 
-import { createStarkSigner } from '@imtbl/core-sdk';
 import readXlsxFile from 'read-excel-file';
 import * as ethers from 'ethers';
 
 // comonents
-import { ToastContainer, toast } from 'react-toastify';
+import { ToastContainer } from 'react-toastify';
 import Grid from '@mui/material/Grid';
 import Box from '@mui/material/Box';
 import Divider from '@mui/material/Divider';
@@ -14,8 +13,11 @@ import Typography from '@mui/material/Typography';
 import SubmitButton from '../../../../components/SubmitButton';
 import TextField from '../../../../components/TextField';
 
+import { useSelector } from 'react-redux';
+import { sSelectedNetwork } from '../../../../redux/selectors/app.selector';
+
 // services
-import { getIMXElements } from '../../../../services/imx.service';
+import { ImmutableService } from '../../../../services';
 
 // utils
 import { fromCsvToUsers } from '../../../../utils/format.util';
@@ -24,7 +26,7 @@ import { fromCsvToUsers } from '../../../../utils/format.util';
 import { IMX_ADDRESS } from '../../../../constants/imx';
 
 // types
-import { TradingClient } from '../../../../types/local-storage';
+import { TradingService } from '../../../../types/local-storage';
 
 // styles
 import useStyles from './styles';
@@ -35,10 +37,12 @@ type CustomLog = {
 };
 
 const TransferToSubWalletsTab: React.FC = () => {
-  const [clients, setClients] = useState<TradingClient[]>([]);
+  const [clients, setClients] = useState<TradingService[]>([]);
   const [logs, setLogs] = useState<CustomLog[]>([]);
   const [amount, setAmount] = useState('');
   const [isTradeSubmitting, setIsTradeSubmitting] = useState(false);
+
+  const selectedNetwork = useSelector(sSelectedNetwork);
 
   const styles = useStyles();
 
@@ -53,13 +57,15 @@ const TransferToSubWalletsTab: React.FC = () => {
 
     try {
       formattedUsers.forEach((user) => {
-        const elements = getIMXElements({
-          walletPrivateKey: user.privateKey,
-        });
+        const service = new ImmutableService(
+          selectedNetwork,
+          user.privateKey,
+          user.starkPrivateKey,
+        );
 
         setClients((prev) =>
           prev.concat({
-            ...elements,
+            service,
             ...user,
           }),
         );
@@ -92,9 +98,8 @@ const TransferToSubWalletsTab: React.FC = () => {
 
       for (const selectedClient of clients) {
         try {
-          const { client, ethSigner, starkPrivateKey, wallet, targetWallet } = selectedClient;
-          const starkSigner = createStarkSigner(starkPrivateKey);
-          const ethAddress = await wallet.getAddress();
+          const { service, targetWallet } = selectedClient;
+          const ethAddress = service.getAddress();
 
           pushLog({
             title: `Select address: ${ethAddress}`,
@@ -112,18 +117,14 @@ const TransferToSubWalletsTab: React.FC = () => {
             title: `Starting transfer ${amount} IMX to ${targetWallet}`,
           });
 
-          await client.transfer(
-            {
-              ethSigner,
-              starkSigner,
-            },
-            {
+          await service.transfer({
+            request: {
               receiver: targetWallet,
               amount: etherToWei(amount),
               type: 'ERC20',
               tokenAddress: IMX_ADDRESS,
             },
-          );
+          });
 
           pushLog({
             title: 'Transfer success!',
