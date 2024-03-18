@@ -1,5 +1,7 @@
+import { orderbook } from '@imtbl/sdk';
 import { getIMXElements } from './imx.service';
 import { getzkEVMElements } from './zkEVM.service';
+import { delay } from '../utils/system';
 
 import { SelectedNetworkType } from '../types/store/app';
 
@@ -34,7 +36,7 @@ export class ImmutableService {
       return ethSigner.address;
     }
 
-    if (this.selectedNetwork === 'polygon') {
+    if (this.selectedNetwork === 'imxZkEVM') {
       const { ethSigner } = getzkEVMElements(this.keys);
 
       return ethSigner.address;
@@ -58,10 +60,63 @@ export class ImmutableService {
       );
     }
 
-    if (this.selectedNetwork === 'polygon') {
-      const { imxProvider } = getzkEVMElements(this.keys);
+    if (this.selectedNetwork === 'imxZkEVM') {
+      const { zkEVMSigner, orderBookClient } = getzkEVMElements(this.keys);
 
-      return imxProvider.createOrder(request);
+      const offerer = await zkEVMSigner.getAddress();
+
+      const preparedListing = await orderBookClient.prepareListing({
+        makerAddress: offerer,
+        buy: {
+          amount: (request.buy as any).amount,
+          type: 'NATIVE',
+        },
+        sell: {
+          contractAddress: (request.sell as any).tokenAddress,
+          tokenId: (request.sell as any).tokenId,
+          type: (request.sell as any).type,
+        },
+      });
+
+      let orderSignature = '';
+      for (const action of preparedListing.actions) {
+        if (action.type === orderbook.ActionType.TRANSACTION) {
+          const builtTx = await action.buildTransaction();
+
+          const gasOverrides = {
+            maxPriorityFeePerGas: 20e9,
+            maxFeePerGas: 30e9,
+            gasLimit: 300000,
+          };
+          const txWithGasOverrides = {
+            ...builtTx,
+            ...gasOverrides,
+          };
+
+          const txResponse = await zkEVMSigner.sendTransaction(txWithGasOverrides);
+          await txResponse.wait();
+        }
+
+        if (action.type === orderbook.ActionType.SIGNABLE) {
+          orderSignature = await zkEVMSigner._signTypedData(
+            action.message.domain,
+            action.message.types,
+            action.message.value,
+          );
+        }
+      }
+
+      const order = await orderBookClient.createListing({
+        orderComponents: preparedListing.orderComponents,
+        orderHash: preparedListing.orderHash,
+        orderSignature,
+        // Optional maker marketplace fee
+        makerFees: [],
+      });
+
+      return {
+        order_id: order.result.id,
+      };
     }
 
     throw new Error(`${this.selectedNetwork} does not support this method!`);
@@ -85,13 +140,36 @@ export class ImmutableService {
       );
     }
 
-    if (this.selectedNetwork === 'polygon') {
-      const { imxProvider, ethSigner } = getzkEVMElements(this.keys);
+    if (this.selectedNetwork === 'imxZkEVM') {
+      // wait order is listed
+      await delay(3000);
+      const { zkEVMSigner, orderBookClient } = getzkEVMElements(this.keys);
+      const offerer = await zkEVMSigner.getAddress();
 
-      return await imxProvider.createTrade({
-        ...request,
-        user: request.user || ethSigner.address,
-      });
+      const { order, actions } = await orderBookClient.fulfillOrder(
+        request.order_id as any,
+        offerer,
+        [],
+      );
+
+      for (const action of actions) {
+        if (action.type === orderbook.ActionType.TRANSACTION) {
+          const builtTx = await action.buildTransaction();
+          const gasOverrides = {
+            maxPriorityFeePerGas: 20e9,
+            maxFeePerGas: 30e9,
+            gasLimit: 300000,
+          };
+          const txWithGasOverrides = {
+            ...builtTx,
+            ...gasOverrides,
+          };
+          const txResponse = await zkEVMSigner.sendTransaction(txWithGasOverrides);
+          await txResponse.wait();
+        }
+      }
+
+      return order;
     }
 
     throw new Error(`${this.selectedNetwork} does not support this method!`);
@@ -108,15 +186,17 @@ export class ImmutableService {
       return response;
     }
 
-    if (this.selectedNetwork === 'polygon') {
-      const { balancesApi, ethSigner } = getzkEVMElements(this.keys);
+    if (this.selectedNetwork === 'imxZkEVM') {
+      const { ethSigner, passportProvider } = getzkEVMElements(this.keys);
 
-      const response = await balancesApi.getBalance({
-        address: IMX_ADDRESS,
-        owner: owner || ethSigner.address,
+      const response = await passportProvider.request({
+        method: 'eth_getBalance',
+        params: [owner || ethSigner.address, 'latest'],
       });
 
-      return response.data;
+      return {
+        balance: `${Number(response)}`,
+      };
     }
 
     throw new Error(`${this.selectedNetwork} does not support this method!`);
@@ -132,21 +212,21 @@ export class ImmutableService {
       });
     }
 
-    if (this.selectedNetwork === 'polygon') {
-      const { ordersApi, ethSigner } = getzkEVMElements(this.keys);
+    if (this.selectedNetwork === 'imxZkEVM') {
+      const { ethSigner, orderBookClient } = getzkEVMElements(this.keys);
 
-      const response = await ordersApi.listOrdersV3({
-        user: owner || ethSigner.address,
-        status: 'active',
+      const response = await orderBookClient.listListings({
+        accountAddress: owner || ethSigner.address,
+        status: orderbook.OrderStatusName.ACTIVE,
       });
 
-      return response.data;
+      return response;
     }
 
     throw new Error(`${this.selectedNetwork} does not support this method!`);
   }
 
-  async cancelOrder(orderId: number) {
+  async cancelOrder(orderId: number | string) {
     if (this.selectedNetwork === 'ethereum') {
       const { client, ethSigner, starkSigner } = getIMXElements(this.keys);
 
@@ -156,17 +236,26 @@ export class ImmutableService {
           starkSigner,
         },
         {
-          order_id: orderId,
+          order_id: Number(orderId),
         },
       );
     }
 
-    if (this.selectedNetwork === 'polygon') {
-      const { imxProvider } = getzkEVMElements(this.keys);
+    if (this.selectedNetwork === 'imxZkEVM') {
+      const { zkEVMSigner, orderBookClient } = getzkEVMElements(this.keys);
 
-      return imxProvider.cancelOrder({
-        order_id: orderId,
-      });
+      const account = await zkEVMSigner.getAddress();
+
+      const listingIds = [String(orderId)];
+
+      const { signableAction } = await orderBookClient.prepareOrderCancellations(listingIds);
+      const cancellationSignature = await zkEVMSigner._signTypedData(
+        signableAction.message.domain,
+        signableAction.message.types,
+        signableAction.message.value,
+      );
+
+      return orderBookClient.cancelOrders(listingIds, account, cancellationSignature);
     }
 
     throw new Error(`${this.selectedNetwork} does not support this method!`);
@@ -181,14 +270,15 @@ export class ImmutableService {
       });
     }
 
-    if (this.selectedNetwork === 'polygon') {
-      const { assetsApi, ethSigner } = getzkEVMElements(this.keys);
+    if (this.selectedNetwork === 'imxZkEVM') {
+      const { ethSigner, blockchainProvider } = getzkEVMElements(this.keys);
 
-      const response = await assetsApi.listAssets({
-        user: owner || ethSigner.address,
+      const response = await blockchainProvider.listNFTsByAccountAddress({
+        accountAddress: owner || ethSigner.address,
+        chainName: 'imtbl-zkevm-mainnet',
       });
 
-      return response.data;
+      return response as any;
     }
 
     throw new Error(`${this.selectedNetwork} does not support this method!`);
@@ -209,10 +299,20 @@ export class ImmutableService {
       );
     }
 
-    if (this.selectedNetwork === 'polygon') {
-      const { imxProvider } = getzkEVMElements(this.keys);
+    if (this.selectedNetwork === 'imxZkEVM' && request.type === 'ERC20') {
+      const { zkEVMSigner } = getzkEVMElements(this.keys);
 
-      return await imxProvider.transfer(request);
+      const amount = request.amount;
+
+      const tx = await zkEVMSigner.sendTransaction({
+        to: request.receiver,
+        value: amount,
+        maxFeePerGas: 15e9,
+        gasLimit: 200000,
+        maxPriorityFeePerGas: 10e9,
+      });
+      await tx.wait();
+      return;
     }
 
     throw new Error(`${this.selectedNetwork} does not support this method!`);

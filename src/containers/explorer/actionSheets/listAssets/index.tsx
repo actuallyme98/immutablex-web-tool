@@ -23,9 +23,9 @@ import useStyles from './styles';
 
 const ListAssetsTab: React.FC = () => {
   const [address, setAddress] = useState('');
-  const [assets, setAssets] = useState<AssetWithOrders[]>([]);
+  const [assets, setAssets] = useState<any[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [selectedNFT, setOpenSelectedNFT] = useState<AssetWithOrders>();
+  const [selectedNFT, setOpenSelectedNFT] = useState<any>({});
   const styles = useStyles();
 
   const { selectedClient } = useContext(ExplorerContext);
@@ -67,12 +67,12 @@ const ListAssetsTab: React.FC = () => {
 
     try {
       const { service } = selectedClient;
-      const { token_address, token_id } = selectedNFT;
+      const { token_address, token_id, contract_address } = selectedNFT;
 
       await service.transfer({
         request: {
           type: 'ERC721',
-          tokenAddress: token_address,
+          tokenAddress: token_address || contract_address,
           tokenId: token_id,
           receiver,
         },
@@ -96,16 +96,16 @@ const ListAssetsTab: React.FC = () => {
     return assets.map((item, index) => (
       <Box key={index} className={styles.assetItem}>
         <Box>
-          <img className={styles.assetImg} src={item.image_url || ''} alt="" />
+          <img className={styles.assetImg} src={item.image_url || item.image || ''} alt="" />
         </Box>
 
         <Box>
-          <div className={styles.assetCollectionName}>{item.collection.name}</div>
+          <div className={styles.assetCollectionName}>{item.collection?.name}</div>
           <div className={styles.assetName}>{item.name}</div>
           <div className={styles.assetId}>#{item.token_id}</div>
         </Box>
 
-        {compareAddresses(ownerAddress, item.user) && (
+        {compareAddresses(ownerAddress, item.user || address) && (
           <div
             className={styles.transferLayerContainer}
             onClick={() => onOpenTransferNFTDialog(item)}
@@ -115,7 +115,7 @@ const ListAssetsTab: React.FC = () => {
         )}
       </Box>
     ));
-  }, [assets, selectedClient]);
+  }, [assets, selectedClient, address]);
 
   return (
     <Box>

@@ -34,7 +34,6 @@ const TransferNFTDialog: React.FC<Props> = (props) => {
 
   const onChangeAddress = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value;
-    console.log('value', value);
     setAddress(value);
   };
 

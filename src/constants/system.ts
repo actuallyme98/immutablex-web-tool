@@ -6,7 +6,7 @@ export const SELECTED_NETWORK_OPTIONS: SelectedNetworkOption[] = [
     label: 'Ethereum',
   },
   {
-    value: 'polygon',
-    label: 'Polygon',
+    value: 'imxZkEVM',
+    label: 'Immutable zkEVM',
   },
 ];

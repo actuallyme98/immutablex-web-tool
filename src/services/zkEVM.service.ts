@@ -1,7 +1,8 @@
-import { x, config } from '@imtbl/sdk';
+import { x, config, passport, orderbook } from '@imtbl/sdk';
 import { BlockchainData } from '@imtbl/sdk/blockchain_data';
 import { Wallet } from '@ethersproject/wallet';
-import { AlchemyProvider } from '@ethersproject/providers';
+import { AlchemyProvider, getDefaultProvider } from '@ethersproject/providers';
+import { WIMX_ADDRESS } from '../constants/imx';
 
 const { Environment, ImmutableConfiguration } = config;
 
@@ -9,13 +10,47 @@ const {
   ProviderConfiguration,
   createStarkSigner,
   GenericIMXProvider,
-  BalancesApi,
-  AssetsApi,
-  OrdersApi,
+  Contracts,
+  IMXClient,
+  imxClientConfig,
 } = x;
 
 const ethNetwork = 'mainnet';
 const alchemyAPIKey = process.env.REACT_APP_ALCHEMY_ZKEVM_KEY || '';
+const publishableKey = process.env.REACT_APP_EKEVM_PUBLISHABLE_KEY || '';
+const clientId = process.env.REACT_APP_EKEVM_CLIENT_ID || '';
+const environment = Environment.PRODUCTION;
+
+const client = new IMXClient(imxClientConfig({ environment }));
+
+const rpcProvider = getDefaultProvider('https://rpc.immutable.com/');
+
+const providerConfig = new ProviderConfiguration({
+  baseConfig: new ImmutableConfiguration({ environment }),
+});
+
+const blockchainProvider = new BlockchainData({
+  baseConfig: new ImmutableConfiguration({ environment }),
+});
+
+const passportInstance = new passport.Passport({
+  baseConfig: {
+    environment: config.Environment.PRODUCTION,
+    publishableKey,
+  },
+  clientId,
+  redirectUri: 'https://localhost:3000/redirect',
+  logoutRedirectUri: 'https://localhost:3000/logout',
+  audience: 'platform_api',
+  scope: 'openid offline_access email transact',
+});
+
+const orderBookClient = new orderbook.Orderbook({
+  baseConfig: {
+    environment: config.Environment.PRODUCTION,
+    publishableKey,
+  },
+});
 
 type GetIMXElementsOptions = {
   walletPrivateKey: string;
@@ -32,29 +67,26 @@ export const getzkEVMElements = (options: GetIMXElementsOptions) => {
 
   const starkSigner = createStarkSigner(starkPrivateKey);
 
-  const environment = Environment.PRODUCTION;
-  const providerConfig = new ProviderConfiguration({
-    baseConfig: new ImmutableConfiguration({ environment }),
-  });
-
-  const blockchainProvider = new BlockchainData({
-    baseConfig: new ImmutableConfiguration({ environment }),
-  });
-
   const imxProvider = new GenericIMXProvider(providerConfig, ethSigner, starkSigner);
 
-  const balancesApi = new BalancesApi();
-  const assetsApi = new AssetsApi();
-  const ordersApi = new OrdersApi();
+  const passportProvider = passportInstance.connectEvm();
+
+  const contract = Contracts.Core.connect(WIMX_ADDRESS, wallet);
+
+  const zkEVMSigner = new Wallet(walletPrivateKey, rpcProvider);
 
   return {
     imxProvider,
     blockchainProvider,
-    balancesApi,
-    assetsApi,
-    ordersApi,
+    contract,
+    passportInstance,
+    orderBookClient,
+    passportProvider,
+    client,
     wallet,
+    zkEVMSigner,
     ethSigner,
     starkSigner,
+    walletPrivateKey,
   };
 };

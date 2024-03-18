@@ -1,4 +1,4 @@
-export type SelectedNetworkType = 'ethereum' | 'polygon';
+export type SelectedNetworkType = 'ethereum' | 'imxZkEVM';
 
 export type SelectedNetworkOption = {
   value: SelectedNetworkType;

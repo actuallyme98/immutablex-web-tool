@@ -93,7 +93,7 @@ const TradingPage: React.FC = () => {
 
   const triggerBuy = async (
     rootUser: TradingService,
-    orderId: number,
+    orderId: number | string,
     ownerClient: TradingService,
   ) => {
     const { service } = rootUser;
@@ -132,7 +132,7 @@ const TradingPage: React.FC = () => {
 
       await service.buy({
         request: {
-          order_id: orderId,
+          order_id: orderId as any,
           user: ethAddress,
           // fees: [
           //   {
@@ -168,7 +168,7 @@ const TradingPage: React.FC = () => {
   };
 
   const triggerLastTx = async (rootClient: TradingService, rootWallet: TradingService) => {
-    const { service, starkPrivateKey, tokenAddress, tokenId } = rootClient;
+    const { service, tokenAddress, tokenId } = rootClient;
     const ethAddress = service.getAddress();
     pushLog({
       title: `Selected Address: ${ethAddress}`,
@@ -228,7 +228,7 @@ const TradingPage: React.FC = () => {
 
       for (const selectedClient of restClients) {
         try {
-          const { service, starkPrivateKey, tokenAddress, tokenId } = selectedClient;
+          const { service, tokenAddress, tokenId } = selectedClient;
           const ethAddress = service.getAddress();
           pushLog({
             title: `Selected Address: ${ethAddress}`,

@@ -9,6 +9,9 @@ import Typography from '@mui/material/Typography';
 import TextField from '../../../../components/TextField';
 import SubmitButton from '../../../../components/SubmitButton';
 
+import { useSelector } from 'react-redux';
+import { sSelectedNetwork } from '../../../../redux/selectors/app.selector';
+
 // contexts
 import { ExplorerContext } from '../../contexts';
 
@@ -18,6 +21,7 @@ import useStyles from './styles';
 const BuyTab: React.FC = () => {
   const [orderId, setOrderId] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const selectedNetwork = useSelector(sSelectedNetwork);
   const styles = useStyles();
 
   const { selectedClient } = useContext(ExplorerContext);
@@ -34,9 +38,12 @@ const BuyTab: React.FC = () => {
       setIsSubmitting(true);
       const { service } = selectedClient;
 
+      const order_id: any =
+        selectedNetwork === 'ethereum' ? parseInt(orderIdTrimmed) : orderIdTrimmed;
+
       await service.buy({
         request: {
-          order_id: parseInt(orderIdTrimmed),
+          order_id,
         },
       });
 

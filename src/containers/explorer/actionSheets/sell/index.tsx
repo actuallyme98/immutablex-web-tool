@@ -61,7 +61,7 @@ const SellTab: React.FC = () => {
         },
       });
 
-      setOrderId(response.order_id.toString());
+      setOrderId(String(response.order_id));
     } catch (error: any) {
       toast(error?.response?.data?.message || error.message, {
         type: 'error',

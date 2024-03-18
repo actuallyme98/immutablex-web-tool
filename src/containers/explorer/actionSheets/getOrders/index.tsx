@@ -26,7 +26,7 @@ import useStyles from './styles';
 
 const GetOrdersTab: React.FC = () => {
   const [address, setAddress] = useState('');
-  const [orders, setOrders] = useState<Order[]>([]);
+  const [orders, setOrders] = useState<any[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const styles = useStyles();
 
@@ -92,43 +92,47 @@ const GetOrdersTab: React.FC = () => {
                 <TableCell>Order Id</TableCell>
                 <TableCell>Item</TableCell>
                 <TableCell>Amount</TableCell>
-                <TableCell>Created At</TableCell>
                 <TableCell>Action</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {orders.map((order) => {
-                const { sell, buy, order_id, timestamp } = order;
-                const { data: sellData } = sell;
-                const { data: buyData } = buy;
+                const { sell, buy, order_id, id } = order;
+                const sellData = sell.data || sell[0] || {};
+                const buyData = buy.data || buy[0] || {};
+                const orderId = order_id || id;
+
                 return (
-                  <TableRow key={order_id}>
-                    <TableCell>{order_id}</TableCell>
+                  <TableRow key={orderId}>
+                    <TableCell>{orderId}</TableCell>
                     <TableCell>
-                      <Box className={styles.assetItem}>
-                        <Box>
-                          <img
-                            className={styles.assetImg}
-                            src={sellData.properties?.image_url || ''}
-                            alt=""
-                          />
+                      {sellData.properties ? (
+                        <Box className={styles.assetItem}>
+                          <Box>
+                            <img
+                              className={styles.assetImg}
+                              src={sellData.properties?.image_url || ''}
+                              alt=""
+                            />
+                          </Box>
+                          <Box>
+                            <div className={styles.assetCollectionName}>
+                              {sellData.properties?.collection?.name}
+                            </div>
+                            <div className={styles.assetName}>{sellData.properties?.name}</div>
+                            <div className={styles.assetId}>#{sellData.token_id}</div>
+                          </Box>
                         </Box>
-                        <Box>
-                          <div className={styles.assetCollectionName}>
-                            {sellData.properties?.collection?.name}
-                          </div>
-                          <div className={styles.assetName}>{sellData.properties?.name}</div>
-                          <div className={styles.assetId}>#{sellData.token_id}</div>
-                        </Box>
-                      </Box>
+                      ) : (
+                        <div>#{sellData.tokenId}</div>
+                      )}
                     </TableCell>
-                    <TableCell>{ethers.formatEther(buyData.quantity)} IMX</TableCell>
                     <TableCell>
-                      {timestamp ? new Date(timestamp).toISOString().slice(0, 10) : ''}
+                      {ethers.formatEther(buyData.quantity || buyData.amount)} IMX
                     </TableCell>
 
                     <TableCell>
-                      <IconButton onClick={() => onDeleteOrder(order_id)}>
+                      <IconButton onClick={() => onDeleteOrder(orderId)}>
                         <ClearIcon color="error" />
                       </IconButton>
                     </TableCell>
