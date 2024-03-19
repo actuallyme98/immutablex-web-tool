@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import clsx from 'clsx';
 
-import { createStarkSigner } from '@imtbl/core-sdk';
 import readXlsxFile from 'read-excel-file';
 import * as ethers from 'ethers';
 
@@ -50,6 +49,10 @@ const TradingPage: React.FC = () => {
   const onChangeSellAmount = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value;
     setSellAmount(value);
+  };
+
+  const weiToEther = (amount: string) => {
+    return ethers.formatEther(amount);
   };
 
   const onChangeFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -107,10 +110,14 @@ const TradingPage: React.FC = () => {
       title: `Selected Address: ${ethAddress}`,
     });
 
-    const balanceResponse = await service.getBalance(ethAddress);
+    const balanceResponse = await service.getBalance();
 
     let currentBalance = parseInt(balanceResponse?.balance || '0');
     const minRequiredBalance = parseFloat(sellAmount) * 1e18;
+    pushLog({
+      title: `${ethAddress} has balanceOf ${weiToEther(balanceResponse?.balance)} IMX`,
+      type: 'info',
+    });
 
     while (currentBalance < minRequiredBalance) {
       pushLog({

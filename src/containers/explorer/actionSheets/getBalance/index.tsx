@@ -13,9 +13,6 @@ import TextField from '../../../../components/TextField';
 // contexts
 import { ExplorerContext } from '../../contexts';
 
-// consts
-import { IMX_ADDRESS } from '../../../../constants/imx';
-
 // styles
 import useStyles from './styles';
 

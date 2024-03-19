@@ -1,3 +1,4 @@
+import { toBigInt } from 'ethers';
 import { orderbook } from '@imtbl/sdk';
 import { getIMXElements } from './imx.service';
 import { getzkEVMElements } from './zkEVM.service';
@@ -194,8 +195,10 @@ export class ImmutableService {
         params: [owner || ethSigner.address, 'latest'],
       });
 
+      const amount = toBigInt(response).toString();
+
       return {
-        balance: `${Number(response)}`,
+        balance: amount,
       };
     }
 
