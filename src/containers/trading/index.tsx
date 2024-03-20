@@ -171,6 +171,7 @@ const TradingPage: React.FC = () => {
             title: `Retry attempt ${retryAttempts} out of ${retryCount}`,
             type: 'warning',
           });
+          await delay(7000);
         }
       }
     }
