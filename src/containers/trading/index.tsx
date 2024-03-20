@@ -98,7 +98,7 @@ const TradingPage: React.FC = () => {
     rootUser: TradingService,
     orderId: number | string,
     ownerClient: TradingService,
-    retryCount = 5,
+    retryCount = 10,
   ) => {
     const { service } = rootUser;
     const ethAddress = service.getAddress();
