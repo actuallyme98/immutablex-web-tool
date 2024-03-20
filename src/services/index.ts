@@ -1,4 +1,4 @@
-import { toBigInt } from 'ethers';
+import { formatEther } from 'ethers';
 import { orderbook } from '@imtbl/sdk';
 import { getIMXElements } from './imx.service';
 import { getzkEVMElements } from './zkEVM.service';
@@ -184,7 +184,9 @@ export class ImmutableService {
         owner: owner || ethSigner.address,
       });
 
-      return response;
+      return {
+        balance: formatEther(response.balance),
+      };
     }
 
     if (this.selectedNetwork === 'imxZkEVM') {
@@ -195,7 +197,7 @@ export class ImmutableService {
         params: [owner || ethSigner.address, 'latest'],
       });
 
-      const amount = toBigInt(response).toString();
+      const amount = String(response);
 
       return {
         balance: amount,

@@ -106,8 +106,7 @@ const TransferToMainWalletTab: React.FC = () => {
           });
 
           const balanceResponse = await service.getBalance(ethAddress);
-          const { balance } = balanceResponse;
-          const ethAmount = weiToEther(balance);
+          const { balance: ethAmount } = balanceResponse;
 
           pushLog({
             title: `Starting transfer ${ethAmount} IMX to ${address}`,

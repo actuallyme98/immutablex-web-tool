@@ -1,5 +1,4 @@
 import React, { useContext, useState } from 'react';
-import * as ethers from 'ethers';
 
 // components
 import { ToastContainer, toast } from 'react-toastify';
@@ -22,10 +21,6 @@ const GetBalanceTab: React.FC = () => {
   const styles = useStyles();
 
   const { selectedClient } = useContext(ExplorerContext);
-
-  const weiToEther = (amount: string) => {
-    return ethers.formatEther(amount);
-  };
 
   const onSubmit = async () => {
     if (!selectedClient) return;
@@ -67,7 +62,7 @@ const GetBalanceTab: React.FC = () => {
             <Divider />
             <Box my={2}>
               <label className={styles.label}>Immutable X (Output)</label>
-              <TextField value={weiToEther(balance)} />
+              <TextField value={balance} />
             </Box>
             <Divider />
           </Grid>

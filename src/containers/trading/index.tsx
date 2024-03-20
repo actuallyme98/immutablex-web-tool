@@ -98,6 +98,7 @@ const TradingPage: React.FC = () => {
     rootUser: TradingService,
     orderId: number | string,
     ownerClient: TradingService,
+    retryCount = 5,
   ) => {
     const { service } = rootUser;
     const ethAddress = service.getAddress();
@@ -113,7 +114,7 @@ const TradingPage: React.FC = () => {
     const balanceResponse = await service.getBalance();
 
     let currentBalance = parseInt(balanceResponse?.balance || '0');
-    const minRequiredBalance = parseFloat(sellAmount) * 1e18;
+    const minRequiredBalance = parseFloat(sellAmount);
     pushLog({
       title: `${ethAddress} has balanceOf ${weiToEther(balanceResponse?.balance)} IMX`,
       type: 'info',
@@ -121,7 +122,7 @@ const TradingPage: React.FC = () => {
 
     while (currentBalance < minRequiredBalance) {
       pushLog({
-        title: 'Insufficient balance on account, starting deplay for 4s ...',
+        title: 'Insufficient balance on account, starting delay for 4s ...',
         type: 'error',
       });
 
@@ -132,45 +133,51 @@ const TradingPage: React.FC = () => {
       currentBalance = parseInt(updatedBalanceResponse?.balance || '0');
     }
 
-    try {
-      pushLog({
-        title: 'Creating Trade ...',
-      });
-
-      await service.buy({
-        request: {
-          order_id: orderId as any,
-          user: ethAddress,
-          // fees: [
-          //   {
-          //     address: ownerAddress,
-          //     fee_percentage: 100,
-          //   },
-          // ],
-        },
-      });
-    } catch (error: any) {
-      pushLog({
-        title: error.message,
-        type: 'error',
-      });
-
-      if (error.message?.includes('not found')) {
+    let retryAttempts = 0;
+    while (retryAttempts < retryCount) {
+      try {
         pushLog({
-          title: 'Creating order again ...',
-          type: 'warning',
+          title: 'Creating Trade ...',
         });
 
-        await triggerLastTx(ownerClient, rootUser);
-        return;
-      }
+        await service.buy({
+          request: {
+            order_id: orderId as any,
+            user: ethAddress,
+          },
+        });
 
-      throw error;
+        pushLog({
+          title: `Trade success order ${orderId}`,
+          type: 'success',
+        });
+        return;
+      } catch (error: any) {
+        pushLog({
+          title: error.message,
+          type: 'error',
+        });
+
+        if (error.message?.includes('not found')) {
+          pushLog({
+            title: 'Creating order again ...',
+            type: 'warning',
+          });
+
+          await triggerLastTx(ownerClient, rootUser);
+        } else {
+          retryAttempts++;
+          pushLog({
+            title: `Retry attempt ${retryAttempts} out of ${retryCount}`,
+            type: 'warning',
+          });
+        }
+      }
     }
 
     pushLog({
-      title: `Trade success order ${orderId}`,
-      type: 'success',
+      title: `Maximum retry attempts (${retryCount}) reached. Unable to complete trade.`,
+      type: 'error',
     });
   };
 
