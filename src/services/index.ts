@@ -157,9 +157,9 @@ export class ImmutableService {
         if (action.type === orderbook.ActionType.TRANSACTION) {
           const builtTx = await action.buildTransaction();
           const gasOverrides = {
-            maxPriorityFeePerGas: 20e9,
-            maxFeePerGas: 30e9,
-            gasLimit: 300000,
+            maxPriorityFeePerGas: 10e9,
+            maxFeePerGas: 15e9,
+            gasLimit: 244947,
           };
           const txWithGasOverrides = {
             ...builtTx,

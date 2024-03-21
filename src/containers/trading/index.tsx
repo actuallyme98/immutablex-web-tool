@@ -104,7 +104,7 @@ const TradingPage: React.FC = () => {
     const ethAddress = service.getAddress();
 
     pushLog({
-      title: `Delected exist order ${orderId}`,
+      title: `Delected exist order id ${orderId}`,
     });
 
     pushLog({
@@ -113,7 +113,7 @@ const TradingPage: React.FC = () => {
 
     const balanceResponse = await service.getBalance();
 
-    let currentBalance = parseInt(balanceResponse?.balance || '0');
+    let currentBalance = parseFloat(balanceResponse?.balance || '0');
     const minRequiredBalance = parseFloat(sellAmount);
     pushLog({
       title: `${ethAddress} has balanceOf ${weiToEther(balanceResponse?.balance)} IMX`,
