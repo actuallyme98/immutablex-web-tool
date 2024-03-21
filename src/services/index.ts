@@ -1,4 +1,4 @@
-import { formatEther } from 'ethers';
+import { formatEther, toBigInt } from 'ethers';
 import { orderbook } from '@imtbl/sdk';
 import { getIMXElements } from './imx.service';
 import { getzkEVMElements } from './zkEVM.service';
@@ -197,10 +197,10 @@ export class ImmutableService {
         params: [owner || ethSigner.address, 'latest'],
       });
 
-      const amount = String(response);
+      const amount = toBigInt(response);
 
       return {
-        balance: amount,
+        balance: formatEther(amount),
       };
     }
 
