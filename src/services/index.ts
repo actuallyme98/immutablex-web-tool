@@ -10,6 +10,12 @@ import { IMX_ADDRESS } from '../constants/imx';
 
 import { BuyParams, SellParams, TransferParams } from './type';
 
+const gasOverrides = {
+  maxPriorityFeePerGas: 10e9,
+  maxFeePerGas: 15e9,
+  gasLimit: 250000,
+};
+
 export class ImmutableService {
   private keys: {
     walletPrivateKey: string;
@@ -84,18 +90,12 @@ export class ImmutableService {
         if (action.type === orderbook.ActionType.TRANSACTION) {
           const builtTx = await action.buildTransaction();
 
-          const gasOverrides = {
-            maxPriorityFeePerGas: 20e9,
-            maxFeePerGas: 30e9,
-            gasLimit: 300000,
-          };
           const txWithGasOverrides = {
             ...builtTx,
             ...gasOverrides,
           };
 
-          const txResponse = await zkEVMSigner.sendTransaction(txWithGasOverrides);
-          await txResponse.wait();
+          await zkEVMSigner.sendTransaction(txWithGasOverrides);
         }
 
         if (action.type === orderbook.ActionType.SIGNABLE) {
@@ -156,17 +156,12 @@ export class ImmutableService {
       for (const action of actions) {
         if (action.type === orderbook.ActionType.TRANSACTION) {
           const builtTx = await action.buildTransaction();
-          const gasOverrides = {
-            maxPriorityFeePerGas: 10e9,
-            maxFeePerGas: 15e9,
-            gasLimit: 244947,
-          };
+
           const txWithGasOverrides = {
             ...builtTx,
             ...gasOverrides,
           };
-          const txResponse = await zkEVMSigner.sendTransaction(txWithGasOverrides);
-          await txResponse.wait();
+          await zkEVMSigner.sendTransaction(txWithGasOverrides);
         }
       }
 
@@ -197,7 +192,7 @@ export class ImmutableService {
         params: [owner || ethSigner.address, 'latest'],
       });
 
-      const amount = toBigInt(response);
+      const amount = toBigInt(response).toString();
 
       return {
         balance: formatEther(amount),

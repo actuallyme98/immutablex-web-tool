@@ -114,9 +114,10 @@ const TradingPage: React.FC = () => {
     const balanceResponse = await service.getBalance();
 
     let currentBalance = parseFloat(balanceResponse?.balance || '0');
+
     const minRequiredBalance = parseFloat(sellAmount);
     pushLog({
-      title: `${ethAddress} has balanceOf ${weiToEther(balanceResponse?.balance)} IMX`,
+      title: `${ethAddress} has balanceOf ${balanceResponse?.balance} IMX`,
       type: 'info',
     });
 
@@ -128,9 +129,9 @@ const TradingPage: React.FC = () => {
 
       await delay(4000);
 
-      const updatedBalanceResponse = await service.getBalance(ethAddress);
+      const updatedBalanceResponse = await service.getBalance();
 
-      currentBalance = parseInt(updatedBalanceResponse?.balance || '0');
+      currentBalance = parseFloat(updatedBalanceResponse?.balance || '0');
     }
 
     let retryAttempts = 0;
