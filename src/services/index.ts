@@ -89,13 +89,7 @@ export class ImmutableService {
       for (const action of preparedListing.actions) {
         if (action.type === orderbook.ActionType.TRANSACTION) {
           const builtTx = await action.buildTransaction();
-
-          const txWithGasOverrides = {
-            ...builtTx,
-            ...gasOverrides,
-          };
-
-          await zkEVMSigner.sendTransaction(txWithGasOverrides);
+          await zkEVMSigner.sendTransaction(builtTx);
         }
 
         if (action.type === orderbook.ActionType.SIGNABLE) {
@@ -142,8 +136,6 @@ export class ImmutableService {
     }
 
     if (this.selectedNetwork === 'imxZkEVM') {
-      // wait order is listed
-      await delay(3000);
       const { zkEVMSigner, orderBookClient } = getzkEVMElements(this.keys);
       const offerer = await zkEVMSigner.getAddress();
 

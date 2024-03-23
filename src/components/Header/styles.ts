@@ -7,6 +7,9 @@ const useStyles = makeStyles({
     alignItems: 'center',
     padding: '12px 32px',
   },
+  link: {
+    color: '#66b2ff',
+  },
 });
 
 export default useStyles;

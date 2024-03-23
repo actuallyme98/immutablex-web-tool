@@ -37,7 +37,7 @@ type CustomLog = {
   type?: 'error' | 'info' | 'warning' | 'success';
 };
 
-const TradingPage: React.FC = () => {
+const TradingV2Page: React.FC = () => {
   const styles = useStyles();
   const [clients, setClients] = useState<TradingService[]>([]);
   const [logs, setLogs] = useState<CustomLog[]>([]);
@@ -49,10 +49,6 @@ const TradingPage: React.FC = () => {
   const onChangeSellAmount = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value;
     setSellAmount(value);
-  };
-
-  const weiToEther = (amount: string) => {
-    return ethers.formatEther(amount);
   };
 
   const onChangeFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -92,6 +88,70 @@ const TradingPage: React.FC = () => {
 
   const etherToWei = (amount: string) => {
     return ethers.parseUnits(amount, 'ether').toString();
+  };
+
+  const onPreCreateOrders = async () => {
+    const updatedClients: TradingService[] = [];
+
+    pushLog({
+      title: 'Start creating orders!',
+      type: 'info',
+    });
+
+    for (const client of clients) {
+      try {
+        const { service, tokenAddress, tokenId } = client;
+
+        const ethAddress = service.getAddress();
+
+        pushLog({
+          title: `Selected Address: ${ethAddress}`,
+        });
+
+        if (!tokenAddress || !tokenId) {
+          pushLog({
+            title: 'Skip this address because TokenAddress or TokenId are empty',
+          });
+          continue;
+        }
+
+        pushLog({
+          title: `Creating Order ...`,
+        });
+
+        const createdOrderResponse = await service.sell({
+          request: {
+            buy: {
+              amount: etherToWei(sellAmount),
+              type: 'ERC20',
+              tokenAddress: IMX_ADDRESS,
+            },
+            sell: {
+              tokenAddress,
+              tokenId,
+              type: 'ERC721',
+            },
+          },
+        });
+
+        pushLog({
+          title: `Created order success with order id ${createdOrderResponse.order_id}`,
+          type: 'success',
+        });
+
+        updatedClients.push({
+          ...client,
+          orderId: String(createdOrderResponse.order_id),
+        });
+      } catch (error: any) {
+        pushLog({
+          title: error.message,
+          type: 'error',
+        });
+      }
+    }
+
+    return updatedClients;
   };
 
   const triggerBuy = async (
@@ -184,107 +244,50 @@ const TradingPage: React.FC = () => {
   };
 
   const triggerLastTx = async (rootClient: TradingService, rootWallet: TradingService) => {
-    const { service, tokenAddress, tokenId } = rootClient;
+    const { service, tokenAddress, tokenId, orderId } = rootClient;
     const ethAddress = service.getAddress();
     pushLog({
       title: `Selected Address: ${ethAddress}`,
     });
-    if (!tokenAddress || !tokenId) {
+    if (!tokenAddress || !tokenId || !orderId) {
       pushLog({
-        title: 'Skip this address because TokenAddress or TokenId are empty',
+        title: 'Skip this address because TokenAddress or TokenId or orderId are empty',
       });
       return;
     }
-    pushLog({
-      title: `Creating Order ...`,
-    });
-    const createdOrderResponse = await service.sell({
-      request: {
-        buy: {
-          amount: etherToWei(sellAmount),
-          type: 'ERC20',
-          tokenAddress: IMX_ADDRESS,
-        },
-        sell: {
-          tokenAddress,
-          tokenId,
-          type: 'ERC721',
-        },
-        // fees: [
-        //   {
-        //     address: ethAddress,
-        //     fee_percentage: 100,
-        //   },
-        // ],
-      },
-    });
 
-    pushLog({
-      title: `Created order success with order id ${createdOrderResponse.order_id}`,
-      type: 'success',
-    });
-
-    await triggerBuy(rootWallet, createdOrderResponse.order_id, rootClient);
+    await triggerBuy(rootWallet, orderId, rootClient);
   };
 
   const onStartTrade = async () => {
-    const start = Date.now();
     if (clients.length === 0) return;
 
-    // const savedSessionData = [...clients];
-    const [rootClient, ...restClients] = clients;
+    const start = Date.now();
+
+    setIsTradeSubmitting(true);
 
     try {
-      setIsTradeSubmitting(true);
       pushLog({
         title: 'Start session ...',
       });
+      const updatedClients = await onPreCreateOrders();
+
+      const [rootClient, ...restClients] = updatedClients;
 
       let rootWallet: TradingService = rootClient;
 
       for (const selectedClient of restClients) {
         try {
-          const { service, tokenAddress, tokenId } = selectedClient;
-          const ethAddress = service.getAddress();
-          pushLog({
-            title: `Selected Address: ${ethAddress}`,
-          });
-          if (!tokenAddress || !tokenId) {
+          const { orderId } = selectedClient;
+
+          if (!orderId) {
             pushLog({
-              title: 'Skip this address because TokenAddress or TokenId are empty',
+              title: 'Skip this address because orderId is empty!',
             });
             continue;
           }
-          pushLog({
-            title: `Creating Order ...`,
-          });
-          const createdOrderResponse = await service.sell({
-            request: {
-              buy: {
-                amount: etherToWei(sellAmount),
-                type: 'ERC20',
-                tokenAddress: IMX_ADDRESS,
-              },
-              sell: {
-                tokenAddress,
-                tokenId,
-                type: 'ERC721',
-              },
-              // fees: [
-              //   {
-              //     address: ethAddress,
-              //     fee_percentage: 100,
-              //   },
-              // ],
-            },
-          });
 
-          pushLog({
-            title: `Created order success with order id ${createdOrderResponse.order_id}`,
-            type: 'success',
-          });
-
-          await triggerBuy(rootWallet, createdOrderResponse.order_id, selectedClient);
+          await triggerBuy(rootWallet, orderId, selectedClient);
           rootWallet = selectedClient;
         } catch (error: any) {
           pushLog({
@@ -299,6 +302,7 @@ const TradingPage: React.FC = () => {
         title: 'Finished all addresses',
         type: 'success',
       });
+
       pushLog({
         title: 'Turn to execute first address',
       });
@@ -310,9 +314,6 @@ const TradingPage: React.FC = () => {
         type: 'error',
       });
     } finally {
-      pushLog({
-        title: 'End session!',
-      });
       setIsTradeSubmitting(false);
       const end = Date.now();
       pushLog({
@@ -399,4 +400,4 @@ const TradingPage: React.FC = () => {
   );
 };
 
-export default TradingPage;
+export default TradingV2Page;

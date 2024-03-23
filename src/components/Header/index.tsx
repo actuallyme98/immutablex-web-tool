@@ -1,4 +1,5 @@
 import React, { useCallback, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 
 import { Select, MenuItem, SelectChangeEvent } from '@mui/material';
 
@@ -8,6 +9,7 @@ import { sSelectedNetwork } from '../../redux/selectors/app.selector';
 import { SelectedNetworkType } from '../../types/store/app';
 
 import { SELECTED_NETWORK_OPTIONS } from '../../constants/system';
+import { AppRouteEnums } from '../../enums/route.enum';
 
 import useStyles from './styles';
 
@@ -38,7 +40,11 @@ const Header: React.FC<Props> = () => {
 
   return (
     <div className={styles.root}>
-      <div></div>
+      <div>
+        <Link className={styles.link} to={AppRouteEnums.HOME}>
+          Home
+        </Link>
+      </div>
       <div>{renderSelectedNetwork}</div>
     </div>
   );
