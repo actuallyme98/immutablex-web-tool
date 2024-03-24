@@ -1,7 +1,7 @@
 import { x, config, passport, orderbook } from '@imtbl/sdk';
 import { BlockchainData } from '@imtbl/sdk/blockchain_data';
 import { Wallet } from '@ethersproject/wallet';
-import { AlchemyProvider, getDefaultProvider } from '@ethersproject/providers';
+import { AlchemyProvider, JsonRpcProvider } from '@ethersproject/providers';
 import { WIMX_ADDRESS } from '../constants/imx';
 
 const { Environment, ImmutableConfiguration } = config;
@@ -23,7 +23,9 @@ const environment = Environment.PRODUCTION;
 
 const client = new IMXClient(imxClientConfig({ environment }));
 
-const rpcProvider = getDefaultProvider('https://rpc.immutable.com/');
+const rpcProvider = new JsonRpcProvider({
+  url: 'https://rpc.immutable.com/',
+});
 
 const providerConfig = new ProviderConfiguration({
   baseConfig: new ImmutableConfiguration({ environment }),
