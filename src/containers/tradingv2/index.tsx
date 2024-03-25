@@ -154,11 +154,37 @@ const TradingV2Page: React.FC = () => {
     return updatedClients;
   };
 
+  const retryGetBalance = async (service: ImmutableService, retryCount = 10) => {
+    let retryAttempts = 0;
+    while (retryAttempts < retryCount) {
+      try {
+        const balanceResponse = await service.getBalance();
+        return parseFloat(balanceResponse?.balance || '0');
+      } catch (error) {
+        retryAttempts++;
+        pushLog({
+          title: `Error fetching balance. Retry attempt ${retryAttempts} out of ${retryCount}`,
+          type: 'warning',
+        });
+        if (retryAttempts >= retryCount) {
+          pushLog({
+            title: `Maximum retry attempts (${retryCount}) reached. Unable to fetch balance.`,
+            type: 'error',
+          });
+          return 0;
+        }
+        await delay(2000); // Wait for 2 seconds
+      }
+    }
+
+    return 0;
+  };
+
   const triggerBuy = async (
     rootUser: TradingService,
     orderId: number | string,
     ownerClient: TradingService,
-    retryCount = 10,
+    retryCount = 20,
   ) => {
     const { service } = rootUser;
     const ethAddress = service.getAddress();
@@ -171,27 +197,21 @@ const TradingV2Page: React.FC = () => {
       title: `Selected Address: ${ethAddress}`,
     });
 
-    const balanceResponse = await service.getBalance();
-
-    let currentBalance = parseFloat(balanceResponse?.balance || '0');
-
+    let currentBalance = await retryGetBalance(service, retryCount);
     const minRequiredBalance = parseFloat(sellAmount);
+
     pushLog({
-      title: `${ethAddress} has balanceOf ${balanceResponse?.balance} IMX`,
+      title: `${ethAddress} has balanceOf ${currentBalance} IMX`,
       type: 'info',
     });
 
     while (currentBalance < minRequiredBalance) {
       pushLog({
-        title: 'Insufficient balance on account, starting delay for 4s ...',
+        title: 'Insufficient balance on account, waiting for 2s before retrying...',
         type: 'error',
       });
-
-      await delay(4000);
-
-      const updatedBalanceResponse = await service.getBalance();
-
-      currentBalance = parseFloat(updatedBalanceResponse?.balance || '0');
+      await delay(2000); // Wait for 2 seconds
+      currentBalance = await retryGetBalance(service, retryCount);
     }
 
     let retryAttempts = 0;
@@ -232,7 +252,7 @@ const TradingV2Page: React.FC = () => {
             title: `Retry attempt ${retryAttempts} out of ${retryCount}`,
             type: 'warning',
           });
-          await delay(10000);
+          await delay(5000); // Wait for 5 seconds
         }
       }
     }
