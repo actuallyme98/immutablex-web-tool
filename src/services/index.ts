@@ -2,11 +2,12 @@ import { formatEther, toBigInt } from 'ethers';
 import { orderbook } from '@imtbl/sdk';
 import { getIMXElements } from './imx.service';
 import { getzkEVMElements } from './zkEVM.service';
-import { delay } from '../utils/system';
+import axios from 'axios';
 
 import { SelectedNetworkType } from '../types/store/app';
 
 import { IMX_ADDRESS } from '../constants/imx';
+import { X_REWARD_POOL_ENDPOINT, ZKEVM_REWARD_POOL_ENDPOINT } from '../constants/system';
 
 import { BuyParams, SellParams, TransferParams } from './type';
 
@@ -50,6 +51,22 @@ export class ImmutableService {
     }
 
     return '';
+  }
+
+  async getRemainingRewardPoints() {
+    if (this.selectedNetwork === 'ethereum') {
+      const { data } = await axios.get(X_REWARD_POOL_ENDPOINT);
+      const remaining_points = data.result?.remaining_points || 0;
+      return remaining_points;
+    }
+
+    if (this.selectedNetwork === 'imxZkEVM') {
+      const { data } = await axios.get(ZKEVM_REWARD_POOL_ENDPOINT);
+      const remaining_points = data.result?.remaining_points || 0;
+      return remaining_points;
+    }
+
+    return 0;
   }
 
   async sell(args: SellParams) {

@@ -22,6 +22,11 @@ export type TradingService = LoadedUser & {
   orderId?: string;
 };
 
+export type TradingServiceV3 = {
+  fileName: string;
+  clients: TradingService[];
+};
+
 export type ConnectedService = {
   id: string;
   service: ImmutableService;
