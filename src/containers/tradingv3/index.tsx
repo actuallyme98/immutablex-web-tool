@@ -296,6 +296,56 @@ const TradingV2Page: React.FC = () => {
     await triggerBuy(rootWallet, orderId, rootClient);
   };
 
+  const tradingv3 = async (fileAndClient: TradingServiceV3) => {
+    const updatedClients = await onPreCreateOrders(fileAndClient);
+
+    if (!updatedClients.length) {
+      pushLog({
+        title: `---- ${fileAndClient.fileName} is empty! ----`,
+        type: 'error',
+      });
+      return;
+    }
+
+    const [rootClient, ...restClients] = updatedClients;
+
+    let rootWallet: TradingService = rootClient;
+
+    for (const selectedClient of restClients) {
+      try {
+        const { orderId } = selectedClient;
+
+        if (!orderId) {
+          pushLog({
+            title: 'Skip this address because orderId is empty!',
+          });
+          continue;
+        }
+
+        await triggerBuy(rootWallet, orderId, selectedClient);
+        rootWallet = selectedClient;
+      } catch (error: any) {
+        pushLog({
+          title: error.message,
+          type: 'error',
+        });
+        return;
+      }
+    }
+
+    pushLog({
+      title: 'Finished all addresses',
+      type: 'success',
+    });
+
+    pushLog({
+      title: 'Turn to execute first address',
+      type: 'success',
+    });
+
+    await triggerLastTx(rootClient, rootWallet);
+  };
+
   const onStartTrade = async () => {
     pushLog({
       title: 'Start session ...',
@@ -304,63 +354,21 @@ const TradingV2Page: React.FC = () => {
     setIsTradeSubmitting(true);
 
     try {
+      const promises: Promise<void>[] = [];
+
       for (const fileAndClient of fileAndClients) {
-        const now = Date.now();
-        if (now - start > 40000) {
-          const remainingPoints = await getRemainingRewardPoints(selectedNetwork);
-          if (remainingPoints <= 0) {
-            return;
-          }
-        }
+        // const now = Date.now();
+        // if (now - start > 40000) {
+        //   const remainingPoints = await getRemainingRewardPoints(selectedNetwork);
+        //   if (remainingPoints <= 0) {
+        //     return;
+        //   }
+        // }
 
-        const updatedClients = await onPreCreateOrders(fileAndClient);
-
-        if (!updatedClients.length) {
-          pushLog({
-            title: `---- ${fileAndClient.fileName} is empty! ----`,
-            type: 'error',
-          });
-          return;
-        }
-
-        const [rootClient, ...restClients] = updatedClients;
-
-        let rootWallet: TradingService = rootClient;
-
-        for (const selectedClient of restClients) {
-          try {
-            const { orderId } = selectedClient;
-
-            if (!orderId) {
-              pushLog({
-                title: 'Skip this address because orderId is empty!',
-              });
-              continue;
-            }
-
-            await triggerBuy(rootWallet, orderId, selectedClient);
-            rootWallet = selectedClient;
-          } catch (error: any) {
-            pushLog({
-              title: error.message,
-              type: 'error',
-            });
-            return;
-          }
-        }
-
-        pushLog({
-          title: 'Finished all addresses',
-          type: 'success',
-        });
-
-        pushLog({
-          title: 'Turn to execute first address',
-          type: 'success',
-        });
-
-        await triggerLastTx(rootClient, rootWallet);
+        promises.push(tradingv3(fileAndClient));
       }
+
+      await Promise.all(promises);
     } catch (error: any) {
       pushLog({
         title: error.message,
