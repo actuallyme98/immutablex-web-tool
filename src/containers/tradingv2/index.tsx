@@ -148,6 +148,7 @@ const TradingV2Page: React.FC = () => {
           title: error.message,
           type: 'error',
         });
+        continue;
       }
     }
 
