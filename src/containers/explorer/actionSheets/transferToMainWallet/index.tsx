@@ -106,7 +106,12 @@ const TransferToMainWalletTab: React.FC = () => {
           });
 
           const balanceResponse = await service.getBalance(ethAddress);
-          const { balance: ethAmount } = balanceResponse;
+          let { balance: ethAmount } = balanceResponse;
+
+          if (selectedNetwork === 'imxZkEVM') {
+            const ZKEVM_TRANSFER_COIN_FEE = 0.01;
+            ethAmount = String(parseFloat(ethAmount) - ZKEVM_TRANSFER_COIN_FEE);
+          }
 
           pushLog({
             title: `Starting transfer ${ethAmount} IMX to ${address}`,

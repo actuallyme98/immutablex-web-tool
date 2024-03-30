@@ -106,7 +106,13 @@ export class ImmutableService {
       for (const action of preparedListing.actions) {
         if (action.type === orderbook.ActionType.TRANSACTION) {
           const builtTx = await action.buildTransaction();
-          await zkEVMSigner.sendTransaction(builtTx);
+
+          const txWithGasOverrides = {
+            ...builtTx,
+            ...gasOverrides,
+          };
+
+          await zkEVMSigner.sendTransaction(txWithGasOverrides);
         }
 
         if (action.type === orderbook.ActionType.SIGNABLE) {
