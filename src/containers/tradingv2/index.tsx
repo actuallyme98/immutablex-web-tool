@@ -1,8 +1,8 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import clsx from 'clsx';
 
 import readXlsxFile from 'read-excel-file';
-import * as ethers from 'ethers';
+import { parseUnits } from 'ethers';
 
 // components
 import Box from '@mui/material/Box';
@@ -22,9 +22,10 @@ import { ImmutableService } from '../../services';
 // utils
 import { fromCsvToUsers } from '../../utils/format.util';
 import { delay } from '../../utils/system';
+import { getRemainingRewardPoints } from '../../utils/api.util';
 
 // types
-import { TradingService } from '../../types/local-storage';
+import { TradingService, TradingServiceV3 } from '../../types/local-storage';
 
 // consts
 import { IMX_ADDRESS } from '../../constants/imx';
@@ -37,12 +38,19 @@ type CustomLog = {
   type?: 'error' | 'info' | 'warning' | 'success';
 };
 
+type Logs = {
+  fileName: string;
+  logs: CustomLog[];
+};
+
 const TradingV2Page: React.FC = () => {
   const styles = useStyles();
-  const [clients, setClients] = useState<TradingService[]>([]);
-  const [logs, setLogs] = useState<CustomLog[]>([]);
+  const [files, setFiles] = useState<File[]>([]);
+  const [fileAndClients, setFileAndClients] = useState<TradingServiceV3[]>([]);
+  const [logs, setLogs] = useState<Logs[]>([]);
   const [sellAmount, setSellAmount] = useState('');
   const [isTradeSubmitting, setIsTradeSubmitting] = useState(false);
+  const [isLoadingWallets, setIsLoadingWallets] = useState(false);
 
   const selectedNetwork = useSelector(sSelectedNetwork);
 
@@ -51,51 +59,85 @@ const TradingV2Page: React.FC = () => {
     setSellAmount(value);
   };
 
-  const onChangeFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
+  const onChangeFile = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const importedFiles = event.target.files || [];
+    const newFiles = Array.from(importedFiles);
+    setFiles((prevFiles) => [...prevFiles, ...newFiles]);
+  }, []);
 
-    if (!file) return;
+  const onDeleteFile = useCallback((fileIndex: number) => {
+    setFiles((prevFiles) => prevFiles.filter((_, index) => index !== fileIndex));
+  }, []);
 
-    const rows = await readXlsxFile(file);
-
-    const formattedUsers = fromCsvToUsers(rows);
-
-    try {
-      formattedUsers.forEach((user) => {
-        const service = new ImmutableService(
-          selectedNetwork,
-          user.privateKey,
-          user.starkPrivateKey,
-        );
-
-        setClients((prev) =>
-          prev.concat({
-            service,
-            ...user,
-          }),
-        );
-      });
-    } catch (error) {
-      //
-    }
-
-    event.target.value = '';
+  const pushLog = (fileName: string, item: CustomLog) => {
+    setLogs((prevLogs) => {
+      const existedLogIndex = prevLogs.findIndex((p) => p.fileName === fileName);
+      if (existedLogIndex !== -1) {
+        const updatedLogs = [...prevLogs];
+        updatedLogs[existedLogIndex] = {
+          ...updatedLogs[existedLogIndex],
+          logs: [...updatedLogs[existedLogIndex].logs, item],
+        };
+        return updatedLogs;
+      } else {
+        return [...prevLogs, { fileName, logs: [item] }];
+      }
+    });
   };
 
-  const pushLog = (item: CustomLog) => {
-    setLogs((prev) => prev.concat(item));
+  const onClearLogs = () => {
+    setLogs([]);
   };
 
   const etherToWei = (amount: string) => {
-    return ethers.parseUnits(amount, 'ether').toString();
+    return parseUnits(amount, 'ether').toString();
   };
 
-  const onPreCreateOrders = async () => {
+  const onLoadWallets = useCallback(async () => {
+    setIsLoadingWallets(true);
+    const updatedClients = await Promise.all(
+      files.map(async (file) => {
+        const rows = await readXlsxFile(file);
+        const formattedUsers = fromCsvToUsers(rows);
+
+        return {
+          fileName: file.name,
+          clients: formattedUsers.map((user) => {
+            const service = new ImmutableService(
+              selectedNetwork,
+              user.privateKey,
+              user.starkPrivateKey,
+            );
+            return {
+              ...user,
+              service,
+            };
+          }),
+        };
+      }),
+    );
+
+    const updatedStateFileAndClient: TradingServiceV3[] = [];
+
+    for (const client of updatedClients) {
+      const fullFillClients = await onPreCreateOrders(client);
+
+      updatedStateFileAndClient.push({
+        fileName: client.fileName,
+        clients: fullFillClients,
+      });
+    }
+
+    setFileAndClients(updatedStateFileAndClient);
+    setIsLoadingWallets(false);
+  }, [files, selectedNetwork]);
+
+  const onPreCreateOrders = async (selectedClient: TradingServiceV3) => {
+    const { fileName, clients } = selectedClient;
     const updatedClients: TradingService[] = [];
 
-    pushLog({
-      title: 'Start creating orders!',
-      type: 'info',
+    pushLog(fileName, {
+      title: `---------- ${fileName} is processing! ----------`,
     });
 
     for (const client of clients) {
@@ -104,18 +146,18 @@ const TradingV2Page: React.FC = () => {
 
         const ethAddress = service.getAddress();
 
-        pushLog({
+        pushLog(fileName, {
           title: `Selected Address: ${ethAddress}`,
         });
 
         if (!tokenAddress || !tokenId) {
-          pushLog({
+          pushLog(fileName, {
             title: 'Skip this address because TokenAddress or TokenId are empty',
           });
           continue;
         }
 
-        pushLog({
+        pushLog(fileName, {
           title: `Creating Order ...`,
         });
 
@@ -134,7 +176,7 @@ const TradingV2Page: React.FC = () => {
           },
         });
 
-        pushLog({
+        pushLog(fileName, {
           title: `Created order success with order id ${createdOrderResponse.order_id}`,
           type: 'success',
         });
@@ -144,7 +186,7 @@ const TradingV2Page: React.FC = () => {
           orderId: String(createdOrderResponse.order_id),
         });
       } catch (error: any) {
-        pushLog({
+        pushLog(fileName, {
           title: error.message,
           type: 'error',
         });
@@ -155,26 +197,31 @@ const TradingV2Page: React.FC = () => {
     return updatedClients;
   };
 
-  const retryGetBalance = async (service: ImmutableService, retryCount = 10) => {
+  const retryGetBalance = async (service: ImmutableService, retryCount = 50, fileName: string) => {
     let retryAttempts = 0;
+
     while (retryAttempts < retryCount) {
       try {
         const balanceResponse = await service.getBalance();
         return parseFloat(balanceResponse?.balance || '0');
-      } catch (error) {
+      } catch (error: any) {
         retryAttempts++;
-        pushLog({
+        pushLog(fileName, {
+          title: error.message,
+          type: 'error',
+        });
+        pushLog(fileName, {
           title: `Error fetching balance. Retry attempt ${retryAttempts} out of ${retryCount}`,
           type: 'warning',
         });
         if (retryAttempts >= retryCount) {
-          pushLog({
+          pushLog(fileName, {
             title: `Maximum retry attempts (${retryCount}) reached. Unable to fetch balance.`,
             type: 'error',
           });
           return 0;
         }
-        await delay(2000); // Wait for 2 seconds
+        await delay(1000); // Wait for 1 seconds
       }
     }
 
@@ -185,43 +232,42 @@ const TradingV2Page: React.FC = () => {
     rootUser: TradingService,
     orderId: number | string,
     ownerClient: TradingService,
-    retryCount = 20,
+    retryCount = 50,
+    fileName: string,
   ) => {
     const { service } = rootUser;
     const ethAddress = service.getAddress();
 
-    pushLog({
+    pushLog(fileName, {
       title: `An order ID ---${orderId}--- has been detected`,
     });
 
-    pushLog({
+    pushLog(fileName, {
       title: `Selected Address: ${ethAddress}`,
     });
 
-    let currentBalance = await retryGetBalance(service, retryCount);
+    let currentBalance = await retryGetBalance(service, retryCount, fileName);
     const minRequiredBalance = parseFloat(sellAmount);
 
-    pushLog({
+    pushLog(fileName, {
       title: `${ethAddress} has balanceOf ${currentBalance} IMX`,
       type: 'info',
     });
 
-    while (currentBalance < minRequiredBalance) {
-      pushLog({
-        title: 'Insufficient balance on account, waiting for 2s before retrying...',
+    let retryAttempts = 0;
+
+    while (currentBalance < minRequiredBalance && retryAttempts < retryCount) {
+      pushLog(fileName, {
+        title: 'Insufficient balance on account, waiting for 1s before retrying...',
         type: 'error',
       });
-      await delay(2000); // Wait for 2 seconds
-      currentBalance = await retryGetBalance(service, retryCount);
+      await delay(1000); // Wait for 1 seconds
+      currentBalance = await retryGetBalance(service, retryCount, fileName);
+      retryAttempts++;
     }
 
-    let retryAttempts = 0;
     while (retryAttempts < retryCount) {
       try {
-        pushLog({
-          title: 'Creating Trade ...',
-        });
-
         await service.buy({
           request: {
             order_id: orderId as any,
@@ -229,145 +275,196 @@ const TradingV2Page: React.FC = () => {
           },
         });
 
-        pushLog({
+        pushLog(fileName, {
           title: `Trade success order ${orderId}`,
           type: 'success',
         });
         return;
       } catch (error: any) {
-        pushLog({
+        pushLog(fileName, {
           title: error.message,
           type: 'error',
         });
 
         if (error.message?.includes('not found')) {
-          pushLog({
+          pushLog(fileName, {
             title: 'Creating order again ...',
             type: 'warning',
           });
 
-          await triggerLastTx(ownerClient, rootUser);
+          await triggerLastTx(ownerClient, rootUser, fileName);
         } else {
           retryAttempts++;
-          pushLog({
-            title: `Retry attempt ${retryAttempts} out of ${retryCount}`,
+          pushLog(fileName, {
+            title: `Retry attempt ${retryAttempts} out of ${retryCount}, waiting for 1s before retrying...`,
             type: 'warning',
           });
-          await delay(5000); // Wait for 5 seconds
+          await delay(1000); // Wait for 2 seconds
         }
       }
     }
 
-    pushLog({
+    pushLog(fileName, {
       title: `Maximum retry attempts (${retryCount}) reached. Unable to complete trade.`,
       type: 'error',
     });
   };
 
-  const triggerLastTx = async (rootClient: TradingService, rootWallet: TradingService) => {
+  const triggerLastTx = async (
+    rootClient: TradingService,
+    rootWallet: TradingService,
+    fileName: string,
+  ) => {
     const { service, tokenAddress, tokenId, orderId } = rootClient;
     const ethAddress = service.getAddress();
-    pushLog({
+    pushLog(fileName, {
       title: `Selected Address: ${ethAddress}`,
     });
     if (!tokenAddress || !tokenId || !orderId) {
-      pushLog({
+      pushLog(fileName, {
         title: 'Skip this address because TokenAddress or TokenId or orderId are empty',
       });
       return;
     }
 
-    await triggerBuy(rootWallet, orderId, rootClient);
+    pushLog(fileName, {
+      title: `Created order success with order id ${orderId}`,
+      type: 'success',
+    });
+
+    await triggerBuy(rootWallet, orderId, rootClient, 50, fileName);
+  };
+
+  const tradingv2 = async (fileAndClient: TradingServiceV3) => {
+    const { fileName } = fileAndClient;
+    const updatedClients = await onPreCreateOrders(fileAndClient);
+
+    pushLog(fileName, {
+      title: `---------- ${fileName} is processing! ----------`,
+    });
+
+    if (!updatedClients.length) {
+      pushLog(fileName, {
+        title: `---- ${fileName} is empty! ----`,
+        type: 'error',
+      });
+      return;
+    }
+
+    const [rootClient, ...restClients] = updatedClients;
+
+    let rootWallet: TradingService = rootClient;
+
+    for (const selectedClient of restClients) {
+      try {
+        const { service, tokenAddress, tokenId, orderId } = selectedClient;
+        const ethAddress = service.getAddress();
+        pushLog(fileName, {
+          title: `Selected Address: ${ethAddress}`,
+        });
+        if (!tokenAddress || !tokenId || !orderId) {
+          pushLog(fileName, {
+            title: 'Skip this address because TokenAddress or TokenId or orderId are empty',
+          });
+          continue;
+        }
+
+        await triggerBuy(rootWallet, orderId, selectedClient, 50, fileName);
+        rootWallet = selectedClient;
+      } catch (error: any) {
+        pushLog(fileName, {
+          title: error.message,
+          type: 'error',
+        });
+        return;
+      }
+    }
+
+    pushLog(fileName, {
+      title: 'Finished all addresses',
+      type: 'success',
+    });
+
+    pushLog(fileName, {
+      title: 'Turn to execute first address',
+      type: 'success',
+    });
+
+    await triggerLastTx(rootClient, rootWallet, fileName);
   };
 
   const onStartTrade = async () => {
-    if (clients.length === 0) return;
-
     const start = Date.now();
-
     setIsTradeSubmitting(true);
 
     try {
-      pushLog({
-        title: 'Start session ...',
-      });
-      const updatedClients = await onPreCreateOrders();
+      const promises: Promise<void>[] = [];
 
-      const [rootClient, ...restClients] = updatedClients;
+      for (const fileAndClient of fileAndClients) {
+        // const now = Date.now();
+        // if (now - start > 40000) {
+        //   const remainingPoints = await getRemainingRewardPoints(selectedNetwork);
+        //   if (remainingPoints <= 0) {
+        //     return;
+        //   }
+        // }
 
-      let rootWallet: TradingService = rootClient;
-
-      for (const selectedClient of restClients) {
-        try {
-          const { orderId } = selectedClient;
-
-          if (!orderId) {
-            pushLog({
-              title: 'Skip this address because orderId is empty!',
-            });
-            continue;
-          }
-
-          await triggerBuy(rootWallet, orderId, selectedClient);
-          rootWallet = selectedClient;
-        } catch (error: any) {
-          pushLog({
-            title: error.message,
-            type: 'error',
-          });
-          return;
-        }
+        promises.push(tradingv2(fileAndClient));
       }
 
-      pushLog({
-        title: 'Finished all addresses',
-        type: 'success',
-      });
-
-      pushLog({
-        title: 'Turn to execute first address',
-      });
-
-      await triggerLastTx(rootClient, rootWallet);
+      await Promise.allSettled(promises);
     } catch (error: any) {
-      pushLog({
+      pushLog('[onStartTrade]', {
         title: error.message,
         type: 'error',
       });
     } finally {
       setIsTradeSubmitting(false);
       const end = Date.now();
-      pushLog({
+      pushLog('[onStartTrade]', {
         title: `Execution time: ${end - start} ms`,
         type: 'success',
       });
     }
   };
 
-  const renderClients = useMemo(() => {
-    return clients.map((item, index) => <Alert key={index}>{item.service.getAddress()}</Alert>);
-  }, [clients]);
+  const renderFiles = useMemo(
+    () =>
+      files.map((file, index) => (
+        <Alert key={index} onClose={() => onDeleteFile(index)}>
+          {file.name}
+        </Alert>
+      )),
+    [files],
+  );
 
   const renderLogs = useMemo(() => {
-    return logs.map((item, index) => (
-      <code
-        key={index}
-        className={clsx(styles.logLine, {
-          [styles.logLineError]: item.type === 'error',
-          [styles.logLineSuccess]: item.type === 'success',
-          [styles.logLineWarning]: item.type === 'warning',
-        })}
-      >
-        {`[${index}]:`} {item.title}
-      </code>
+    return logs.map((l, lid) => (
+      <div key={lid}>
+        {l.logs?.map((item, index) => (
+          <code
+            key={index}
+            className={clsx(styles.logLine, {
+              [styles.logLineError]: item.type === 'error',
+              [styles.logLineSuccess]: item.type === 'success',
+              [styles.logLineWarning]: item.type === 'warning',
+            })}
+          >
+            {`[${index}]:`} {item.title}
+          </code>
+        ))}
+      </div>
     ));
   }, [logs]);
 
   useEffect(() => {
-    setClients(
-      clients.map((client) => ({
+    setFileAndClients(
+      fileAndClients.map((client) => ({
         ...client,
-        service: new ImmutableService(selectedNetwork, client.privateKey, client.starkPrivateKey),
+        clients: client.clients.map((c) => ({
+          ...c,
+          service: new ImmutableService(selectedNetwork, c.privateKey, c.starkPrivateKey),
+        })),
       })),
     );
   }, [selectedNetwork]);
@@ -376,20 +473,26 @@ const TradingV2Page: React.FC = () => {
     <Box className={styles.root}>
       <Box width="100%">
         <Typography variant="h2" textAlign="center" mb={4}>
-          IMX web tools
+          Trading v2
         </Typography>
 
-        {clients.length === 0 ? (
-          <Box>
-            <input type="file" onChange={onChangeFile} accept=".csv, .xlsx" />
-          </Box>
-        ) : (
-          <Grid container spacing={4}>
-            <Grid item xs={4}>
-              <Typography mb={2}>Loaded users</Typography>
-              <Stack spacing={2}>{renderClients}</Stack>
-            </Grid>
+        <Box mb={4}>
+          <input type="file" onChange={onChangeFile} accept=".csv, .xlsx" multiple />
+        </Box>
 
+        <Grid container spacing={4}>
+          <Grid item xs={4}>
+            {files.length > 0 && (
+              <Box mb={4}>
+                <SubmitButton onClick={onLoadWallets} isLoading={isLoadingWallets}>
+                  Load wallets
+                </SubmitButton>
+              </Box>
+            )}
+            <Stack spacing={2}>{renderFiles}</Stack>
+          </Grid>
+
+          {fileAndClients.length > 0 && (
             <Grid item xs={8}>
               <Box>
                 <TextField
@@ -410,12 +513,21 @@ const TradingV2Page: React.FC = () => {
                 >
                   Start trade
                 </SubmitButton>
+
+                <SubmitButton
+                  style={{
+                    marginLeft: 16,
+                  }}
+                  onClick={onClearLogs}
+                >
+                  Clear Logs
+                </SubmitButton>
               </Box>
 
               <Box className={styles.logsContainer}>{renderLogs}</Box>
             </Grid>
-          </Grid>
-        )}
+          )}
+        </Grid>
       </Box>
     </Box>
   );

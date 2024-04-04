@@ -105,7 +105,7 @@ const ListAssetsTab: React.FC = () => {
           <div className={styles.assetId}>#{item.token_id}</div>
         </Box>
 
-        {compareAddresses(ownerAddress, item.user || address) && (
+        {!compareAddresses(ownerAddress, item.user || address) && (
           <div
             className={styles.transferLayerContainer}
             onClick={() => onOpenTransferNFTDialog(item)}

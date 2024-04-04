@@ -1,4 +1,4 @@
-import { formatEther, toBigInt } from 'ethers';
+import { formatEther, Contract, toBigInt } from 'ethers';
 import { orderbook } from '@imtbl/sdk';
 import { getIMXElements } from './imx.service';
 import { getzkEVMElements } from './zkEVM.service';
@@ -314,20 +314,32 @@ export class ImmutableService {
       );
     }
 
-    if (this.selectedNetwork === 'imxZkEVM' && request.type === 'ERC20') {
-      const { zkEVMSigner } = getzkEVMElements(this.keys);
+    if (this.selectedNetwork === 'imxZkEVM') {
+      const { zkEVMSigner, wallet } = getzkEVMElements(this.keys);
+      const sender = wallet.address;
 
-      const amount = request.amount;
+      if (request.type === 'ERC20') {
+        const amount = request.amount;
 
-      const tx = await zkEVMSigner.sendTransaction({
-        to: request.receiver,
-        value: amount,
-        maxFeePerGas: 15e9,
-        gasLimit: 200000,
-        maxPriorityFeePerGas: 10e9,
-      });
-      await tx.wait();
-      return;
+        const tx = await zkEVMSigner.sendTransaction({
+          to: request.receiver,
+          value: amount,
+          ...gasOverrides,
+        });
+        await tx.wait();
+        return;
+      }
+
+      if (request.type === 'ERC721') {
+        const contract = new Contract(
+          request.tokenAddress,
+          ['function safeTransferFrom(address from, address to, uint256 tokenId)'],
+          zkEVMSigner as any,
+        );
+
+        await contract.safeTransferFrom(sender, request.receiver, request.tokenId, gasOverrides);
+        return;
+      }
     }
 
     throw new Error(`${this.selectedNetwork} does not support this method!`);

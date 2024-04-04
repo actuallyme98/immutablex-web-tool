@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import clsx from 'clsx';
 
 import readXlsxFile from 'read-excel-file';
-import * as ethers from 'ethers';
+import { parseUnits } from 'ethers';
 
 // components
 import Box from '@mui/material/Box';
@@ -43,7 +43,7 @@ type Logs = {
   logs: CustomLog[];
 };
 
-const TradingV2Page: React.FC = () => {
+const TradingV3Page: React.FC = () => {
   const styles = useStyles();
   const [files, setFiles] = useState<File[]>([]);
   const [fileAndClients, setFileAndClients] = useState<TradingServiceV3[]>([]);
@@ -90,7 +90,7 @@ const TradingV2Page: React.FC = () => {
   };
 
   const etherToWei = (amount: string) => {
-    return ethers.parseUnits(amount, 'ether').toString();
+    return parseUnits(amount, 'ether').toString();
   };
 
   const onLoadWallets = useCallback(async () => {
@@ -549,4 +549,4 @@ const TradingV2Page: React.FC = () => {
   );
 };
 
-export default TradingV2Page;
+export default TradingV3Page;
