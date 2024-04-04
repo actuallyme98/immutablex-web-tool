@@ -158,6 +158,28 @@ const TradingV2Page: React.FC = () => {
         }
 
         pushLog(fileName, {
+          title: 'Fetching orders...',
+        });
+
+        const getOrdersResponse = await service.getOrders(ethAddress);
+        const listedOrders = getOrdersResponse.result || [];
+
+        pushLog(fileName, {
+          title: `Found ${listedOrders.length} orders!`,
+        });
+
+        if (listedOrders.length > 0) {
+          for (const listedOrder of listedOrders) {
+            const { order_id, id } = listedOrder as any;
+            const orderId = order_id || id;
+            pushLog(fileName, {
+              title: `Cancelling order id: ${orderId}`,
+            });
+            await service.cancelOrder(orderId);
+          }
+        }
+
+        pushLog(fileName, {
           title: `Creating Order ...`,
         });
 
