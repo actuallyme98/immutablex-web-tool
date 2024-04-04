@@ -12,9 +12,9 @@ import { X_REWARD_POOL_ENDPOINT, ZKEVM_REWARD_POOL_ENDPOINT } from '../constants
 import { BuyParams, SellParams, TransferParams } from './type';
 
 const gasOverrides = {
-  maxPriorityFeePerGas: 10e9,
-  maxFeePerGas: 15e9,
-  gasLimit: 250000,
+  maxPriorityFeePerGas: 15e9,
+  maxFeePerGas: 20e9,
+  gasLimit: 300000,
 };
 
 export class ImmutableService {

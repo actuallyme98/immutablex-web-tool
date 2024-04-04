@@ -93,7 +93,7 @@ const TradingV2Page: React.FC = () => {
     return parseUnits(amount, 'ether').toString();
   };
 
-  const onLoadWallets = useCallback(async () => {
+  const onLoadWallets = async () => {
     setIsLoadingWallets(true);
     const updatedClients = await Promise.all(
       files.map(async (file) => {
@@ -130,7 +130,7 @@ const TradingV2Page: React.FC = () => {
 
     setFileAndClients(updatedStateFileAndClient);
     setIsLoadingWallets(false);
-  }, [files, selectedNetwork]);
+  };
 
   const onPreCreateOrders = async (selectedClient: TradingServiceV3) => {
     const { fileName, clients } = selectedClient;
@@ -336,14 +336,13 @@ const TradingV2Page: React.FC = () => {
   };
 
   const tradingv2 = async (fileAndClient: TradingServiceV3) => {
-    const { fileName } = fileAndClient;
-    const updatedClients = await onPreCreateOrders(fileAndClient);
+    const { fileName, clients } = fileAndClient;
 
     pushLog(fileName, {
       title: `---------- ${fileName} is processing! ----------`,
     });
 
-    if (!updatedClients.length) {
+    if (!clients.length) {
       pushLog(fileName, {
         title: `---- ${fileName} is empty! ----`,
         type: 'error',
@@ -351,7 +350,7 @@ const TradingV2Page: React.FC = () => {
       return;
     }
 
-    const [rootClient, ...restClients] = updatedClients;
+    const [rootClient, ...restClients] = clients;
 
     let rootWallet: TradingService = rootClient;
 
@@ -492,41 +491,39 @@ const TradingV2Page: React.FC = () => {
             <Stack spacing={2}>{renderFiles}</Stack>
           </Grid>
 
-          {fileAndClients.length > 0 && (
-            <Grid item xs={8}>
-              <Box>
-                <TextField
-                  size="small"
-                  label="Enter IMX amount"
-                  type="number"
-                  className={styles.amountInput}
-                  value={sellAmount}
-                  onChange={onChangeSellAmount}
-                  autoComplete="off"
-                />
+          <Grid item xs={8}>
+            <Box>
+              <TextField
+                size="small"
+                label="Enter IMX amount"
+                type="number"
+                className={styles.amountInput}
+                value={sellAmount}
+                onChange={onChangeSellAmount}
+                autoComplete="off"
+              />
 
-                <SubmitButton
-                  variant="contained"
-                  onClick={onStartTrade}
-                  isLoading={isTradeSubmitting}
-                  disabled={isTradeSubmitting || !sellAmount || isNaN(parseFloat(sellAmount))}
-                >
-                  Start trade
-                </SubmitButton>
+              <SubmitButton
+                variant="contained"
+                onClick={onStartTrade}
+                isLoading={isTradeSubmitting}
+                disabled={isTradeSubmitting || !sellAmount || isNaN(parseFloat(sellAmount))}
+              >
+                Start trade
+              </SubmitButton>
 
-                <SubmitButton
-                  style={{
-                    marginLeft: 16,
-                  }}
-                  onClick={onClearLogs}
-                >
-                  Clear Logs
-                </SubmitButton>
-              </Box>
+              <SubmitButton
+                style={{
+                  marginLeft: 16,
+                }}
+                onClick={onClearLogs}
+              >
+                Clear Logs
+              </SubmitButton>
+            </Box>
 
-              <Box className={styles.logsContainer}>{renderLogs}</Box>
-            </Grid>
-          )}
+            <Box className={styles.logsContainer}>{renderLogs}</Box>
+          </Grid>
         </Grid>
       </Box>
     </Box>
