@@ -32,6 +32,10 @@ const HomePage: React.FC = () => {
       path: AppRouteEnums.TRADING_V3,
     },
     {
+      label: 'Trading v4',
+      path: AppRouteEnums.TRADING_V4,
+    },
+    {
       label: 'Explorer',
       path: AppRouteEnums.EXPLORER,
     },
@@ -51,7 +55,7 @@ const HomePage: React.FC = () => {
     <Box className={styles.root}>
       <div>
         <Typography variant="h2" className={styles.heading}>
-          ImmutableX Web Tools V2.14.3
+          ImmutableX Web Tools V2.15.0
         </Typography>
 
         <div>

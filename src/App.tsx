@@ -12,6 +12,7 @@ import RegisterOffChainPage from './containers/registerOffChain';
 import TradingPage from './containers/trading';
 import TradingV2Page from './containers/tradingv2';
 import TradingV3Page from './containers/tradingv3';
+import TradingV4Page from './containers/tradingv4';
 import ExplorerPage from './containers/explorer';
 
 // contexts
@@ -52,6 +53,10 @@ const MainApp: React.FC = () => {
         {
           path: AppRouteEnums.TRADING_V3,
           element: <TradingV3Page />,
+        },
+        {
+          path: AppRouteEnums.TRADING_V4,
+          element: <TradingV4Page />,
         },
         {
           path: AppRouteEnums.EXPLORER,

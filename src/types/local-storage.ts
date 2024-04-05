@@ -20,6 +20,7 @@ export type TradingClient = LoadedUser & ClientSet;
 export type TradingService = LoadedUser & {
   service: ImmutableService;
   orderId?: string;
+  index?: number;
 };
 
 export type TradingServiceV3 = {
