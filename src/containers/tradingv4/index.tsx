@@ -345,13 +345,11 @@ const TradingV4Page: React.FC = () => {
   ) => {
     const ethAddress = service.getAddress();
     let poolBalance = await retryGetBalance(service, 50, fileName);
-    const ZKEVM_TRANSFER_COIN_FEE = 0.01;
 
     pushLog(fileName, {
       title: `${ethAddress} has balanceOf ${poolBalance} IMX`,
     });
 
-    const transferPoolBalance = String(poolBalance - ZKEVM_TRANSFER_COIN_FEE);
     const minRequiredBalance = parseFloat(sellAmount);
     let retryAttempts = 0;
 
@@ -366,14 +364,14 @@ const TradingV4Page: React.FC = () => {
     }
 
     pushLog(fileName, {
-      title: `Starting transfer ${transferPoolBalance} IMX to ${ethAddress}`,
+      title: `Starting transfer ${minRequiredBalance} IMX to ${ethAddress}`,
     });
 
     await service.transfer({
       request: {
         type: 'ERC20',
         receiver: targetAddress,
-        amount: etherToWei(transferPoolBalance),
+        amount: etherToWei(sellAmount),
         tokenAddress: '',
       },
     });
