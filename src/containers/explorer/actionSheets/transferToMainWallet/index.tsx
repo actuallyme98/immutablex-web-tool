@@ -108,6 +108,14 @@ const TransferToMainWalletTab: React.FC = () => {
           const balanceResponse = await service.getBalance(ethAddress);
           let { balance: ethAmount } = balanceResponse;
 
+          if (parseFloat(ethAmount) <= 0) {
+            pushLog({
+              title: `Skip current client`,
+              type: 'warning',
+            });
+            continue;
+          }
+
           if (selectedNetwork === 'imxZkEVM') {
             const ZKEVM_TRANSFER_COIN_FEE = 0.01;
             ethAmount = String(parseFloat(ethAmount) - ZKEVM_TRANSFER_COIN_FEE);
