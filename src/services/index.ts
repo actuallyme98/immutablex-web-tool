@@ -12,8 +12,8 @@ import { X_REWARD_POOL_ENDPOINT, ZKEVM_REWARD_POOL_ENDPOINT } from '../constants
 import { BuyParams, SellParams, TransferParams } from './type';
 
 const gasOverrides = {
-  maxPriorityFeePerGas: 20e9,
-  maxFeePerGas: 20e9,
+  maxPriorityFeePerGas: 25e9,
+  maxFeePerGas: 30e9,
   gasLimit: 300000,
 };
 

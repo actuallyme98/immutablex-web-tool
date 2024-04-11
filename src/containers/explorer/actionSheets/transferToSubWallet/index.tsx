@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import clsx from 'clsx';
 
 import readXlsxFile from 'read-excel-file';
@@ -169,6 +169,15 @@ const TransferToSubWalletsTab: React.FC = () => {
       </code>
     ));
   }, [logs]);
+
+  useEffect(() => {
+    setClients((prev) =>
+      prev.map((client) => ({
+        ...client,
+        service: new ImmutableService(selectedNetwork, client.privateKey, client.starkPrivateKey),
+      })),
+    );
+  }, [selectedNetwork]);
 
   return (
     <Box>
