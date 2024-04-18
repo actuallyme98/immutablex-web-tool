@@ -93,6 +93,14 @@ const TransferToMainWalletTab: React.FC = () => {
   };
 
   const onSubmitTransfer = async () => {
+    const MAX_RETRIES = 50;
+    let retries = 0;
+    const gasOverrides = {
+      maxPriorityFeePerGas: 10e9,
+      maxFeePerGas: 15e9,
+      gasLimit: 300000,
+    };
+
     try {
       if (clients.length === 0 || !address) return;
 
@@ -116,6 +124,10 @@ const TransferToMainWalletTab: React.FC = () => {
             continue;
           }
 
+          pushLog({
+            title: `${ethAddress} has balanceOf ${ethAmount} IMX`,
+          });
+
           if (selectedNetwork === 'imxZkEVM') {
             const ZKEVM_TRANSFER_COIN_FEE = 0.01;
             ethAmount = String(parseFloat(ethAmount) - ZKEVM_TRANSFER_COIN_FEE);
@@ -125,28 +137,54 @@ const TransferToMainWalletTab: React.FC = () => {
             title: `Starting transfer ${ethAmount} IMX to ${address}`,
           });
 
-          await service.transfer({
-            request: {
-              receiver: address,
-              amount: etherToWei(ethAmount),
-              type: 'ERC20',
-              tokenAddress: IMX_ADDRESS,
-            },
-          });
+          while (retries < MAX_RETRIES) {
+            try {
+              await service.transfer(
+                {
+                  request: {
+                    receiver: address,
+                    amount: etherToWei(ethAmount),
+                    type: 'ERC20',
+                    tokenAddress: IMX_ADDRESS,
+                  },
+                },
+                gasOverrides,
+              );
 
+              pushLog({
+                title: 'Transfer success!',
+                type: 'success',
+              });
+              break;
+            } catch (transferError: any) {
+              pushLog({
+                title: transferError.message,
+                type: 'error',
+              });
+              retries++;
+              if (retries === MAX_RETRIES) {
+                pushLog({
+                  title: 'Max retries reached. Skipping current client.',
+                  type: 'warning',
+                });
+                break;
+              }
+              pushLog({
+                title: `Retrying transfer (${retries}/${MAX_RETRIES})...`,
+                type: 'error',
+              });
+            }
+          }
+        } catch (clientError: any) {
           pushLog({
-            title: 'Transfer success!',
-            type: 'success',
-          });
-        } catch (error: any) {
-          pushLog({
-            title: error.message,
+            title: clientError.message,
             type: 'error',
           });
           pushLog({
             title: `Skip current client`,
             type: 'warning',
           });
+          retries = 0;
           continue;
         }
       }

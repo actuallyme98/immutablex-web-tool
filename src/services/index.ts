@@ -12,7 +12,7 @@ import { X_REWARD_POOL_ENDPOINT, ZKEVM_REWARD_POOL_ENDPOINT } from '../constants
 import { BuyParams, SellParams, TransferParams } from './type';
 
 const gasOverrides = {
-  maxPriorityFeePerGas: 50e9,
+  maxPriorityFeePerGas: 15e9,
   maxFeePerGas: 50e9,
   gasLimit: 300000,
 };
@@ -299,8 +299,10 @@ export class ImmutableService {
     throw new Error(`${this.selectedNetwork} does not support this method!`);
   }
 
-  async transfer(args: TransferParams) {
+  async transfer(args: TransferParams, customGasOverrides?: any) {
     const { request } = args;
+
+    const selectedGasOverrides = customGasOverrides || gasOverrides;
 
     if (this.selectedNetwork === 'ethereum') {
       const { client, ethSigner, starkSigner } = getIMXElements(this.keys);
@@ -324,7 +326,7 @@ export class ImmutableService {
         await zkEVMSigner.sendTransaction({
           to: request.receiver,
           value: amount,
-          ...gasOverrides,
+          ...selectedGasOverrides,
         });
         return;
       }
@@ -336,7 +338,12 @@ export class ImmutableService {
           zkEVMSigner as any,
         );
 
-        await contract.safeTransferFrom(sender, request.receiver, request.tokenId, gasOverrides);
+        await contract.safeTransferFrom(
+          sender,
+          request.receiver,
+          request.tokenId,
+          selectedGasOverrides,
+        );
         return;
       }
     }
