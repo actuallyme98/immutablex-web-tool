@@ -321,12 +321,11 @@ export class ImmutableService {
       if (request.type === 'ERC20') {
         const amount = request.amount;
 
-        const tx = await zkEVMSigner.sendTransaction({
+        await zkEVMSigner.sendTransaction({
           to: request.receiver,
           value: amount,
           ...gasOverrides,
         });
-        await tx.wait();
         return;
       }
 

@@ -344,42 +344,52 @@ const TradingV4Page: React.FC = () => {
     fileName: string,
   ) => {
     const ethAddress = service.getAddress();
-    let poolBalance = await retryGetBalance(service, 50, fileName);
-
-    pushLog(fileName, {
-      title: `${ethAddress} has balanceOf ${poolBalance} IMX`,
-    });
 
     const minRequiredBalance = parseFloat(sellAmount);
-    let retryAttempts = 0;
 
-    while (poolBalance < minRequiredBalance && retryAttempts < retryCount) {
-      pushLog(fileName, {
-        title: 'Insufficient balance on account, waiting for 1s before retrying...',
-        type: 'error',
-      });
-      await delay(1000);
-      poolBalance = await retryGetBalance(service, retryCount, fileName);
-      retryAttempts++;
-    }
+    let retryAttempts = 0;
 
     pushLog(fileName, {
       title: `Starting transfer ${minRequiredBalance} IMX to ${ethAddress}`,
     });
 
-    await service.transfer({
-      request: {
-        type: 'ERC20',
-        receiver: targetAddress,
-        amount: etherToWei(sellAmount),
-        tokenAddress: '',
-      },
-    });
+    while (retryAttempts < retryCount) {
+      try {
+        await service.transfer({
+          request: {
+            type: 'ERC20',
+            receiver: targetAddress,
+            amount: etherToWei(sellAmount),
+            tokenAddress: '',
+          },
+        });
 
-    pushLog(fileName, {
-      title: 'Transfer success!',
-      type: 'success',
-    });
+        pushLog(fileName, {
+          title: 'Transfer success!',
+          type: 'success',
+        });
+
+        break;
+      } catch (error: any) {
+        retryAttempts++;
+
+        pushLog(fileName, {
+          title: `Transfer attempt ${retryAttempts} failed: ${error.message}`,
+          type: 'error',
+        });
+
+        if (retryAttempts === retryCount) {
+          pushLog(fileName, {
+            title: `Maximum retry attempts reached (${retryCount}). Transfer failed.`,
+            type: 'error',
+          });
+
+          throw new Error('Transfer failed after maximum retry attempts.');
+        }
+
+        await delay(1000);
+      }
+    }
   };
 
   const triggerLastTx = async (
