@@ -8,8 +8,8 @@ const { Environment, ImmutableConfiguration } = config;
 
 const {
   ProviderConfiguration,
-  createStarkSigner,
-  GenericIMXProvider,
+  // createStarkSigner,
+  // GenericIMXProvider,
   Contracts,
   IMXClient,
   imxClientConfig,
@@ -56,20 +56,19 @@ const orderBookClient = new orderbook.Orderbook({
 
 type GetIMXElementsOptions = {
   walletPrivateKey: string;
-  starkPrivateKey: string;
 };
 
 export const getzkEVMElements = (options: GetIMXElementsOptions) => {
-  const { walletPrivateKey, starkPrivateKey } = options;
+  const { walletPrivateKey } = options;
 
   const provider = new AlchemyProvider(ethNetwork, alchemyAPIKey);
   const wallet = new Wallet(walletPrivateKey);
 
   const ethSigner = wallet.connect(provider);
 
-  const starkSigner = createStarkSigner(starkPrivateKey);
+  // const starkSigner = createStarkSigner(starkPrivateKey);
 
-  const imxProvider = new GenericIMXProvider(providerConfig, ethSigner, starkSigner);
+  // const imxProvider = new GenericIMXProvider(providerConfig, ethSigner, starkSigner);
 
   const passportProvider = passportInstance.connectEvm();
 
@@ -78,7 +77,7 @@ export const getzkEVMElements = (options: GetIMXElementsOptions) => {
   const zkEVMSigner = new Wallet(walletPrivateKey, rpcProvider);
 
   return {
-    imxProvider,
+    // imxProvider,
     blockchainProvider,
     contract,
     passportInstance,
@@ -88,7 +87,7 @@ export const getzkEVMElements = (options: GetIMXElementsOptions) => {
     wallet,
     zkEVMSigner,
     ethSigner,
-    starkSigner,
+    // starkSigner,
     walletPrivateKey,
   };
 };
