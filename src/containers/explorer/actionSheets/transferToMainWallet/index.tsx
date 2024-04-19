@@ -93,7 +93,7 @@ const TransferToMainWalletTab: React.FC = () => {
   };
 
   const onSubmitTransfer = async () => {
-    const MAX_RETRIES = 50;
+    const MAX_RETRIES = 5;
     let retries = 0;
     const gasOverrides = {
       maxPriorityFeePerGas: 10e9,
