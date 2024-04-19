@@ -6,7 +6,7 @@ import axios from 'axios';
 
 import { SelectedNetworkType } from '../types/store/app';
 
-import { IMX_ADDRESS } from '../constants/imx';
+import { IMX_ADDRESS, ZKEVM_GEM_ADDRESS } from '../constants/imx';
 import { X_REWARD_POOL_ENDPOINT, ZKEVM_REWARD_POOL_ENDPOINT } from '../constants/system';
 
 import { BuyParams, SellParams, TransferParams } from './type';
@@ -35,6 +35,10 @@ export class ImmutableService {
       walletPrivateKey,
       starkPrivateKey,
     };
+  }
+
+  getElements() {
+    return getIMXElements(this.keys);
   }
 
   getAddress() {
@@ -349,5 +353,13 @@ export class ImmutableService {
     }
 
     throw new Error(`${this.selectedNetwork} does not support this method!`);
+  }
+
+  async getGem() {
+    const { zkEVMSigner } = getzkEVMElements(this.keys);
+    const contract = new Contract(ZKEVM_GEM_ADDRESS, ['function earnGem()'], zkEVMSigner as any);
+
+    await contract.earnGem({ maxPriorityFeePerGas: 10e9, maxFeePerGas: 15e9, gasLimit: 35000 });
+    return;
   }
 }

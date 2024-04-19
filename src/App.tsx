@@ -14,6 +14,8 @@ import TradingV2Page from './containers/tradingv2';
 import TradingV3Page from './containers/tradingv3';
 import TradingV4Page from './containers/tradingv4';
 import ExplorerPage from './containers/explorer';
+import ClaimRewardsPage from './containers/claimRewards';
+import GetGemsPage from './containers/getGems';
 
 // contexts
 import { ExplorerContextProvider } from './containers/explorer/contexts';
@@ -57,6 +59,14 @@ const MainApp: React.FC = () => {
         {
           path: AppRouteEnums.TRADING_V4,
           element: <TradingV4Page />,
+        },
+        {
+          path: AppRouteEnums.CLAIM_REWARDS,
+          element: <ClaimRewardsPage />,
+        },
+        {
+          path: AppRouteEnums.GET_GEMS,
+          element: <GetGemsPage />,
         },
         {
           path: AppRouteEnums.EXPLORER,

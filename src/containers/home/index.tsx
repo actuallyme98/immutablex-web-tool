@@ -39,6 +39,14 @@ const HomePage: React.FC = () => {
       label: 'Explorer',
       path: AppRouteEnums.EXPLORER,
     },
+    {
+      label: 'Claim Rewards',
+      path: AppRouteEnums.CLAIM_REWARDS,
+    },
+    {
+      label: 'Get Gems',
+      path: AppRouteEnums.GET_GEMS,
+    },
   ];
 
   const renderMenuItems = useMemo(() => {
@@ -55,7 +63,7 @@ const HomePage: React.FC = () => {
     <Box className={styles.root}>
       <div>
         <Typography variant="h2" className={styles.heading}>
-          ImmutableX Web Tools V2.15.7
+          ImmutableX Web Tools V2.16.0
         </Typography>
 
         <div>
