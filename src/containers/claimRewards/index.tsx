@@ -79,6 +79,7 @@ const ClaimRewardsPage: React.FC = () => {
   const onStartTrade = async () => {
     const start = Date.now();
     if (clients.length === 0) return;
+    let totalPoints = 0;
 
     try {
       setIsTradeSubmitting(true);
@@ -96,7 +97,7 @@ const ClaimRewardsPage: React.FC = () => {
         });
 
         let retryCount = 10;
-        let points;
+        let points = '0';
         while (retryCount > 0) {
           try {
             points = await claimPointsForWallet(ethSigner);
@@ -124,6 +125,8 @@ const ClaimRewardsPage: React.FC = () => {
           title: `Claimed: ${points}`,
           type: 'success',
         });
+
+        totalPoints += parseFloat(points);
       }
     } catch (error: any) {
       pushLog({
@@ -132,7 +135,8 @@ const ClaimRewardsPage: React.FC = () => {
       });
     } finally {
       pushLog({
-        title: 'End session!',
+        title: `------- Total rewards claimed: ${totalPoints} -------`,
+        type: 'success',
       });
       setIsTradeSubmitting(false);
       const end = Date.now();
