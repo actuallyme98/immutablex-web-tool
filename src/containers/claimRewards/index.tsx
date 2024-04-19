@@ -96,7 +96,7 @@ const ClaimRewardsPage: React.FC = () => {
           title: `Selected Address: ${ethAddress}`,
         });
 
-        let retryCount = 10;
+        let retryCount = 2;
         let points = '0';
         while (retryCount > 0) {
           try {
@@ -108,15 +108,16 @@ const ClaimRewardsPage: React.FC = () => {
               type: 'error',
             });
             pushLog({
-              title: error.message,
+              title: JSON.stringify(error.response || error.message),
               type: 'error',
             });
             retryCount--;
             await delay(1000);
             if (retryCount === 0) {
-              throw new Error(
-                `Failed to claim points after ${retryCount} retries for ${ethAddress}`,
-              );
+              pushLog({
+                title: `Failed to claim points after ${retryCount} retries for ${ethAddress}`,
+              });
+              continue;
             }
           }
         }
