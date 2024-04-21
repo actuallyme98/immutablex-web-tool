@@ -3,6 +3,7 @@ import clsx from 'clsx';
 
 import readXlsxFile from 'read-excel-file';
 import { parseUnits } from 'ethers';
+import moment from 'moment';
 
 // components
 import Box from '@mui/material/Box';
@@ -22,13 +23,13 @@ import { ImmutableService } from '../../services';
 // utils
 import { fromCsvToUsers } from '../../utils/format.util';
 import { delay } from '../../utils/system';
-import { getRemainingRewardPoints } from '../../utils/api.util';
 
 // types
 import { TradingService, TradingServiceV3 } from '../../types/local-storage';
 
 // consts
 import { IMX_ADDRESS } from '../../constants/imx';
+import { DEFAULT_FORMAT_HOUR_AND_MINUTE } from '../../constants/system';
 
 // styles
 import useStyles from './styles';
@@ -49,6 +50,7 @@ const TradingV4Page: React.FC = () => {
   const [fileAndClients, setFileAndClients] = useState<TradingServiceV3[]>([]);
   const [logs, setLogs] = useState<Logs[]>([]);
   const [sellAmount, setSellAmount] = useState('');
+  const [tradingTime, setTradingTime] = useState('');
   const [isTradeSubmitting, setIsTradeSubmitting] = useState(false);
   const [isLoadingWallets, setIsLoadingWallets] = useState(false);
 
@@ -57,6 +59,15 @@ const TradingV4Page: React.FC = () => {
   const onChangeSellAmount = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value;
     setSellAmount(value);
+  };
+
+  const onChangeTradingTimeInput = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value;
+    setTradingTime(value);
+  };
+
+  const onResetTradingTime = () => {
+    setTradingTime('');
   };
 
   const onChangeFile = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -458,12 +469,7 @@ const TradingV4Page: React.FC = () => {
     }
 
     pushLog(fileName, {
-      title: 'Finished all addresses',
-      type: 'success',
-    });
-
-    pushLog(fileName, {
-      title: 'Turn to execute first address',
+      title: 'Finished all addresses!',
       type: 'success',
     });
 
@@ -472,21 +478,25 @@ const TradingV4Page: React.FC = () => {
   };
 
   const onStartTrade = async () => {
-    const start = Date.now();
     setIsTradeSubmitting(true);
+
+    if (tradingTime) {
+      const now = moment();
+      const tradingMoment = moment(tradingTime, DEFAULT_FORMAT_HOUR_AND_MINUTE);
+
+      const diffTime = moment(tradingMoment).diff(now);
+
+      if (diffTime > 0) {
+        await delay(diffTime);
+      }
+    }
+
+    const start = Date.now();
 
     try {
       const promises: Promise<void>[] = [];
 
       for (const fileAndClient of fileAndClients) {
-        // const now = Date.now();
-        // if (now - start > 40000) {
-        //   const remainingPoints = await getRemainingRewardPoints(selectedNetwork);
-        //   if (remainingPoints <= 0) {
-        //     return;
-        //   }
-        // }
-
         promises.push(tradingv4(fileAndClient));
       }
 
@@ -571,6 +581,19 @@ const TradingV4Page: React.FC = () => {
           </Grid>
 
           <Grid item xs={8}>
+            <Box mb={2}>
+              <input type="time" value={tradingTime} step={1} onChange={onChangeTradingTimeInput} />
+
+              <SubmitButton
+                style={{
+                  marginLeft: 16,
+                }}
+                onClick={onResetTradingTime}
+              >
+                Reset Time
+              </SubmitButton>
+            </Box>
+
             <Box>
               <TextField
                 size="small"
