@@ -113,7 +113,7 @@ export class ImmutableService {
 
           const txWithGasOverrides = {
             ...builtTx,
-            ...gasOverrides,
+            // ...gasOverrides,
           };
 
           await zkEVMSigner.sendTransaction(txWithGasOverrides);
@@ -144,8 +144,13 @@ export class ImmutableService {
     throw new Error(`${this.selectedNetwork} does not support this method!`);
   }
 
-  async buy(args: BuyParams) {
+  async buy(args: BuyParams, customGasOverrides?: any) {
     const { request } = args;
+
+    const selectedGasOverrides = {
+      ...gasOverrides,
+      ...customGasOverrides,
+    };
 
     if (this.selectedNetwork === 'ethereum') {
       const { client, ethSigner, starkSigner } = getIMXElements(this.keys);
@@ -178,7 +183,7 @@ export class ImmutableService {
 
           const txWithGasOverrides = {
             ...builtTx,
-            ...gasOverrides,
+            ...selectedGasOverrides,
           };
           await zkEVMSigner.sendTransaction(txWithGasOverrides);
         }

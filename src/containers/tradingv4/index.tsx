@@ -50,6 +50,9 @@ const TradingV4Page: React.FC = () => {
   const [fileAndClients, setFileAndClients] = useState<TradingServiceV3[]>([]);
   const [logs, setLogs] = useState<Logs[]>([]);
   const [sellAmount, setSellAmount] = useState('');
+  const [maxFeePerGas, setMaxFeePerGas] = useState('75');
+  const [maxPriorityFeePerGas, setMaxPriorityFeePerGas] = useState('25');
+  const [gasLimit, setGasLimit] = useState('300000');
   const [tradingTime, setTradingTime] = useState('');
   const [isTradeSubmitting, setIsTradeSubmitting] = useState(false);
   const [isLoadingWallets, setIsLoadingWallets] = useState(false);
@@ -68,6 +71,21 @@ const TradingV4Page: React.FC = () => {
 
   const onResetTradingTime = () => {
     setTradingTime('');
+  };
+
+  const onChangeMaxFeePerGas = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value;
+    setMaxFeePerGas(value);
+  };
+
+  const onChangeMaxPriorityFeePerGas = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value;
+    setMaxPriorityFeePerGas(value);
+  };
+
+  const onChangeGasLimit = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value;
+    setGasLimit(value);
   };
 
   const onChangeFile = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -235,41 +253,9 @@ const TradingV4Page: React.FC = () => {
     return updatedClients;
   };
 
-  // const retryGetBalance = async (service: ImmutableService, retryCount = 50, fileName: string) => {
-  //   let retryAttempts = 0;
-
-  //   while (retryAttempts < retryCount) {
-  //     try {
-  //       const balanceResponse = await service.getBalance();
-  //       return parseFloat(balanceResponse?.balance || '0');
-  //     } catch (error: any) {
-  //       retryAttempts++;
-  //       pushLog(fileName, {
-  //         title: error.message,
-  //         type: 'error',
-  //       });
-  //       pushLog(fileName, {
-  //         title: `Error fetching balance. Retry attempt ${retryAttempts} out of ${retryCount}`,
-  //         type: 'warning',
-  //       });
-  //       if (retryAttempts >= retryCount) {
-  //         pushLog(fileName, {
-  //           title: `Maximum retry attempts (${retryCount}) reached. Unable to fetch balance.`,
-  //           type: 'error',
-  //         });
-  //         return 0;
-  //       }
-  //       await delay(1000); // Wait for 1 seconds
-  //     }
-  //   }
-
-  //   return 0;
-  // };
-
   const triggerBuy = async (
     rootUser: TradingService,
     orderId: number | string,
-    ownerClient: TradingService,
     retryCount = 50,
     fileName: string,
   ) => {
@@ -286,14 +272,23 @@ const TradingV4Page: React.FC = () => {
 
     let retryAttempts = 0;
 
+    const gasOptions = {
+      maxPriorityFeePerGas: maxPriorityFeePerGas ? parseFloat(maxPriorityFeePerGas) * 1e9 : 25e9,
+      maxFeePerGas: maxFeePerGas ? parseFloat(maxFeePerGas) * 1e9 : 75e9,
+      gasLimit: gasLimit ? parseFloat(gasLimit) : 300000,
+    };
+
     while (retryAttempts < retryCount) {
       try {
-        await service.buy({
-          request: {
-            order_id: orderId as any,
-            user: ethAddress,
+        await service.buy(
+          {
+            request: {
+              order_id: orderId as any,
+              user: ethAddress,
+            },
           },
-        });
+          gasOptions,
+        );
 
         pushLog(fileName, {
           title: `Trade success order ${orderId}`,
@@ -306,21 +301,13 @@ const TradingV4Page: React.FC = () => {
           type: 'error',
         });
 
-        if (error.message?.includes('not found')) {
-          pushLog(fileName, {
-            title: 'Creating order again ...',
-            type: 'warning',
-          });
+        retryAttempts++;
+        pushLog(fileName, {
+          title: `Retry attempt ${retryAttempts} out of ${retryCount}, waiting for 1s before retrying...`,
+          type: 'warning',
+        });
 
-          await triggerLastTx(ownerClient, rootUser, fileName);
-        } else {
-          retryAttempts++;
-          pushLog(fileName, {
-            title: `Retry attempt ${retryAttempts} out of ${retryCount}, waiting for 1s before retrying...`,
-            type: 'warning',
-          });
-          await delay(1000); // Wait for 2 seconds
-        }
+        await delay(1000);
       }
     }
 
@@ -385,31 +372,6 @@ const TradingV4Page: React.FC = () => {
     }
   };
 
-  const triggerLastTx = async (
-    rootClient: TradingService,
-    rootWallet: TradingService,
-    fileName: string,
-  ) => {
-    const { service, tokenAddress, tokenId, orderId } = rootClient;
-    const ethAddress = service.getAddress();
-    pushLog(fileName, {
-      title: `Selected Address: ${ethAddress}`,
-    });
-    if (!tokenAddress || !tokenId || !orderId) {
-      pushLog(fileName, {
-        title: 'Skip this address because TokenAddress or TokenId or orderId are empty',
-      });
-      return;
-    }
-
-    pushLog(fileName, {
-      title: `Created order success with order id ${orderId}`,
-      type: 'success',
-    });
-
-    await triggerBuy(rootWallet, orderId, rootClient, 50, fileName);
-  };
-
   const tradingv4 = async (fileAndClient: TradingServiceV3) => {
     const { fileName, clients } = fileAndClient;
 
@@ -453,7 +415,7 @@ const TradingV4Page: React.FC = () => {
             });
             continue;
           }
-          await triggerBuy(rootWallet, orderId, selectedClient, 50, fileName);
+          await triggerBuy(rootWallet, orderId, 50, fileName);
           poolWallet = selectedClient;
         } else {
           await triggerTransfer(poolWallet.service, ethAddress, 50, fileName);
@@ -474,7 +436,6 @@ const TradingV4Page: React.FC = () => {
     });
 
     await triggerTransfer(poolWallet.service, rootAddress, 50, fileName);
-    // await triggerLastTx(rootClient, rootWallet, fileName);
   };
 
   const onStartTrade = async () => {
@@ -572,7 +533,55 @@ const TradingV4Page: React.FC = () => {
           <Grid item xs={4}>
             {files.length > 0 && (
               <Box mb={4}>
-                <SubmitButton onClick={onLoadWallets} isLoading={isLoadingWallets}>
+                <Box mb={2}>
+                  <TextField
+                    size="small"
+                    label="Enter IMX amount"
+                    type="number"
+                    className={styles.amountInput}
+                    value={sellAmount}
+                    onChange={onChangeSellAmount}
+                    autoComplete="off"
+                  />
+                  <Box mt={2} mb={1}>
+                    Gas options:
+                  </Box>
+                  <TextField
+                    size="small"
+                    label="maxFeePerGas"
+                    type="number"
+                    className={styles.gasOptionInput}
+                    value={maxFeePerGas}
+                    onChange={onChangeMaxFeePerGas}
+                    autoComplete="off"
+                  />
+                  <br />
+                  <TextField
+                    size="small"
+                    label="maxPriorityFeePerGas"
+                    type="number"
+                    className={styles.gasOptionInput}
+                    value={maxPriorityFeePerGas}
+                    onChange={onChangeMaxPriorityFeePerGas}
+                    autoComplete="off"
+                  />
+                  <br />
+                  <TextField
+                    size="small"
+                    label="gasLimit"
+                    type="number"
+                    className={styles.gasOptionInput}
+                    value={gasLimit}
+                    onChange={onChangeGasLimit}
+                    autoComplete="off"
+                  />
+                </Box>
+
+                <SubmitButton
+                  onClick={onLoadWallets}
+                  disabled={!sellAmount}
+                  isLoading={isLoadingWallets}
+                >
                   Load wallets
                 </SubmitButton>
               </Box>
@@ -595,21 +604,11 @@ const TradingV4Page: React.FC = () => {
             </Box>
 
             <Box>
-              <TextField
-                size="small"
-                label="Enter IMX amount"
-                type="number"
-                className={styles.amountInput}
-                value={sellAmount}
-                onChange={onChangeSellAmount}
-                autoComplete="off"
-              />
-
               <SubmitButton
                 variant="contained"
                 onClick={onStartTrade}
                 isLoading={isTradeSubmitting}
-                disabled={isTradeSubmitting || !sellAmount || isNaN(parseFloat(sellAmount))}
+                disabled={isTradeSubmitting || fileAndClients.length === 0}
               >
                 Start trade
               </SubmitButton>
