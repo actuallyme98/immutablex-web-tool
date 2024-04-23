@@ -51,7 +51,7 @@ const TradingV4Page: React.FC = () => {
   const [logs, setLogs] = useState<Logs[]>([]);
   const [sellAmount, setSellAmount] = useState('');
   const [maxFeePerGas, setMaxFeePerGas] = useState('50');
-  const [maxPriorityFeePerGas, setMaxPriorityFeePerGas] = useState('15');
+  const [maxPriorityFeePerGas, setMaxPriorityFeePerGas] = useState('25');
   const [gasLimit, setGasLimit] = useState('300000');
   const [tradingTime, setTradingTime] = useState('');
   const [isTradeSubmitting, setIsTradeSubmitting] = useState(false);
