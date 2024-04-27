@@ -6,6 +6,7 @@ export enum AppRouteEnums {
   TRADING_V3 = '/trading/v3',
   TRADING_V4 = '/trading/v4',
   EXPLORER = '/explorer',
+  TRANSFER = '/transfer',
   CLAIM_REWARDS = '/claim-rewards',
   GET_GEMS = '/get-gems',
 }

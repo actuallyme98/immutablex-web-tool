@@ -14,6 +14,7 @@ import TradingV2Page from './containers/tradingv2';
 import TradingV3Page from './containers/tradingv3';
 import TradingV4Page from './containers/tradingv4';
 import ExplorerPage from './containers/explorer';
+import TransferPage from './containers/transfer';
 import ClaimRewardsPage from './containers/claimRewards';
 import GetGemsPage from './containers/getGems';
 
@@ -75,6 +76,10 @@ const MainApp: React.FC = () => {
               <ExplorerPage />
             </ExplorerContextProvider>
           ),
+        },
+        {
+          path: AppRouteEnums.TRANSFER,
+          element: <TransferPage />,
         },
       ],
     },

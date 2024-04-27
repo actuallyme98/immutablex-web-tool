@@ -40,6 +40,10 @@ const HomePage: React.FC = () => {
       path: AppRouteEnums.EXPLORER,
     },
     {
+      label: 'Transfer',
+      path: AppRouteEnums.TRANSFER,
+    },
+    {
       label: 'Claim Rewards',
       path: AppRouteEnums.CLAIM_REWARDS,
     },
@@ -63,7 +67,7 @@ const HomePage: React.FC = () => {
     <Box className={styles.root}>
       <div>
         <Typography variant="h2" className={styles.heading}>
-          ImmutableX Web Tools V2.17.3
+          ImmutableX Web Tools V2.18.0
         </Typography>
 
         <div>

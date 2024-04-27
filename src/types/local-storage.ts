@@ -35,3 +35,9 @@ export type ConnectedService = {
   starkPrivateKey: string;
   walletName?: string;
 };
+
+export type GasOptions = {
+  maxPriorityFeePerGas: number;
+  maxFeePerGas: number;
+  gasLimit: number;
+};

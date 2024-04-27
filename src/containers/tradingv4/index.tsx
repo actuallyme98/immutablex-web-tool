@@ -53,6 +53,11 @@ const TradingV4Page: React.FC = () => {
   const [maxFeePerGas, setMaxFeePerGas] = useState('50');
   const [maxPriorityFeePerGas, setMaxPriorityFeePerGas] = useState('25');
   const [gasLimit, setGasLimit] = useState('300000');
+
+  const [tmaxFeePerGas, setTMaxFeePerGas] = useState('50');
+  const [tmaxPriorityFeePerGas, setTMaxPriorityFeePerGas] = useState('25');
+  const [tgasLimit, setTGasLimit] = useState('300000');
+
   const [tradingTime, setTradingTime] = useState('');
   const [isTradeSubmitting, setIsTradeSubmitting] = useState(false);
   const [isLoadingWallets, setIsLoadingWallets] = useState(false);
@@ -86,6 +91,21 @@ const TradingV4Page: React.FC = () => {
   const onChangeGasLimit = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value;
     setGasLimit(value);
+  };
+
+  const onChangeTMaxFeePerGas = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value;
+    setTMaxFeePerGas(value);
+  };
+
+  const onChangeTMaxPriorityFeePerGas = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value;
+    setTMaxPriorityFeePerGas(value);
+  };
+
+  const onChangeTGasLimit = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value;
+    setTGasLimit(value);
   };
 
   const onChangeFile = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -274,7 +294,7 @@ const TradingV4Page: React.FC = () => {
 
     const gasOptions = {
       maxPriorityFeePerGas: maxPriorityFeePerGas ? parseFloat(maxPriorityFeePerGas) * 1e9 : 25e9,
-      maxFeePerGas: maxFeePerGas ? parseFloat(maxFeePerGas) * 1e9 : 75e9,
+      maxFeePerGas: maxFeePerGas ? parseFloat(maxFeePerGas) * 1e9 : 50e9,
       gasLimit: gasLimit ? parseFloat(gasLimit) : 300000,
     };
 
@@ -333,16 +353,25 @@ const TradingV4Page: React.FC = () => {
       title: `Starting transfer ${minRequiredBalance} IMX to ${ethAddress}`,
     });
 
+    const gasOptions = {
+      maxPriorityFeePerGas: tmaxPriorityFeePerGas ? parseFloat(tmaxPriorityFeePerGas) * 1e9 : 25e9,
+      maxFeePerGas: tmaxFeePerGas ? parseFloat(tmaxFeePerGas) * 1e9 : 50e9,
+      gasLimit: tgasLimit ? parseFloat(tgasLimit) : 300000,
+    };
+
     while (retryAttempts < retryCount) {
       try {
-        await service.transfer({
-          request: {
-            type: 'ERC20',
-            receiver: targetAddress,
-            amount: etherToWei(sellAmount),
-            tokenAddress: '',
+        await service.transfer(
+          {
+            request: {
+              type: 'ERC20',
+              receiver: targetAddress,
+              amount: etherToWei(sellAmount),
+              tokenAddress: '',
+            },
           },
-        });
+          gasOptions,
+        );
 
         pushLog(fileName, {
           title: 'Transfer success!',
@@ -543,38 +572,75 @@ const TradingV4Page: React.FC = () => {
                     onChange={onChangeSellAmount}
                     autoComplete="off"
                   />
-                  <Box mt={2} mb={1}>
-                    Gas options:
+                  <Box mt={2} mb={2}>
+                    Gas options (Trade - Transfer)
                   </Box>
-                  <TextField
-                    size="small"
-                    label="maxFeePerGas"
-                    type="number"
-                    className={styles.gasOptionInput}
-                    value={maxFeePerGas}
-                    onChange={onChangeMaxFeePerGas}
-                    autoComplete="off"
-                  />
-                  <br />
-                  <TextField
-                    size="small"
-                    label="maxPriorityFeePerGas"
-                    type="number"
-                    className={styles.gasOptionInput}
-                    value={maxPriorityFeePerGas}
-                    onChange={onChangeMaxPriorityFeePerGas}
-                    autoComplete="off"
-                  />
-                  <br />
-                  <TextField
-                    size="small"
-                    label="gasLimit"
-                    type="number"
-                    className={styles.gasOptionInput}
-                    value={gasLimit}
-                    onChange={onChangeGasLimit}
-                    autoComplete="off"
-                  />
+                  <Box mb={1}>
+                    <TextField
+                      size="small"
+                      label="maxFeePerGas"
+                      type="number"
+                      className={styles.gasOptionInput}
+                      value={maxFeePerGas}
+                      onChange={onChangeMaxFeePerGas}
+                      autoComplete="off"
+                    />
+
+                    <TextField
+                      size="small"
+                      label="maxFeePerGas"
+                      type="number"
+                      className={styles.gasOptionInput}
+                      style={{ marginLeft: 12 }}
+                      value={maxFeePerGas}
+                      onChange={onChangeTMaxFeePerGas}
+                      autoComplete="off"
+                    />
+                  </Box>
+
+                  <Box mb={1}>
+                    <TextField
+                      size="small"
+                      label="maxPriorityFeePerGas"
+                      type="number"
+                      className={styles.gasOptionInput}
+                      value={maxPriorityFeePerGas}
+                      onChange={onChangeMaxPriorityFeePerGas}
+                      autoComplete="off"
+                    />
+                    <TextField
+                      size="small"
+                      label="maxPriorityFeePerGas"
+                      type="number"
+                      className={styles.gasOptionInput}
+                      style={{ marginLeft: 12 }}
+                      value={maxPriorityFeePerGas}
+                      onChange={onChangeTMaxPriorityFeePerGas}
+                      autoComplete="off"
+                    />
+                  </Box>
+
+                  <Box>
+                    <TextField
+                      size="small"
+                      label="gasLimit"
+                      type="number"
+                      className={styles.gasOptionInput}
+                      value={gasLimit}
+                      onChange={onChangeGasLimit}
+                      autoComplete="off"
+                    />
+                    <TextField
+                      size="small"
+                      label="gasLimit"
+                      type="number"
+                      className={styles.gasOptionInput}
+                      style={{ marginLeft: 12 }}
+                      value={gasLimit}
+                      onChange={onChangeTGasLimit}
+                      autoComplete="off"
+                    />
+                  </Box>
                 </Box>
 
                 <SubmitButton
