@@ -22,7 +22,7 @@ import { fromCsvToUsers } from '../../utils/format.util';
 import { delay } from '../../utils/system';
 
 // types
-import { TradingService } from '../../types/local-storage';
+import { TradingServiceV3, TradingService } from '../../types/local-storage';
 
 // styles
 import useStyles from './styles';
@@ -34,39 +34,41 @@ type CustomLog = {
 
 const GetGemsPage: React.FC = () => {
   const styles = useStyles();
-  const [clients, setClients] = useState<TradingService[]>([]);
+  const [files, setFiles] = useState<File[]>([]);
+  const [fileAndClients, setFileAndClients] = useState<TradingServiceV3[]>([]);
   const [logs, setLogs] = useState<CustomLog[]>([]);
   const [isTradeSubmitting, setIsTradeSubmitting] = useState(false);
 
   const selectedNetwork = useSelector(sSelectedNetwork);
 
   const onChangeFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
+    const importedFiles = event.target.files || [];
+    const newFiles = Array.from(importedFiles);
 
-    if (!file) return;
+    const updatedClients = await Promise.all(
+      newFiles.map(async (file) => {
+        const rows = await readXlsxFile(file);
+        const formattedUsers = fromCsvToUsers(rows);
 
-    const rows = await readXlsxFile(file);
-
-    const formattedUsers = fromCsvToUsers(rows);
-
-    try {
-      formattedUsers.forEach((user) => {
-        const service = new ImmutableService(
-          selectedNetwork,
-          user.privateKey,
-          user.starkPrivateKey,
-        );
-
-        setClients((prev) =>
-          prev.concat({
-            service,
-            ...user,
+        return {
+          fileName: file.name,
+          clients: formattedUsers.map((user) => {
+            const service = new ImmutableService(
+              selectedNetwork,
+              user.privateKey,
+              user.starkPrivateKey,
+            );
+            return {
+              ...user,
+              service,
+            };
           }),
-        );
-      });
-    } catch (error) {
-      //
-    }
+        };
+      }),
+    );
+
+    setFiles(newFiles);
+    setFileAndClients(updatedClients);
 
     event.target.value = '';
   };
@@ -75,9 +77,43 @@ const GetGemsPage: React.FC = () => {
     setLogs((prev) => prev.concat(item));
   };
 
+  const onGetGems = async (clients: TradingService[]) => {
+    for (const client of clients) {
+      const { service } = client;
+      const ethAddress = service.getAddress();
+
+      pushLog({
+        title: `Selected Address: ${ethAddress}`,
+      });
+
+      let retryCount = 10;
+      while (retryCount > 0) {
+        try {
+          await service.getGem();
+          break;
+        } catch (error: any) {
+          pushLog({
+            title: error.message,
+            type: 'error',
+          });
+          retryCount--;
+          await delay(1000);
+          if (retryCount === 0) {
+            throw new Error(`Failed to getGem after ${retryCount} retries for ${ethAddress}`);
+          }
+        }
+      }
+
+      pushLog({
+        title: `${ethAddress} get 1 Gem success!`,
+        type: 'success',
+      });
+    }
+  };
+
   const onStartTrade = async () => {
     const start = Date.now();
-    if (clients.length === 0) return;
+    if (fileAndClients.length === 0) return;
 
     try {
       setIsTradeSubmitting(true);
@@ -85,36 +121,14 @@ const GetGemsPage: React.FC = () => {
         title: 'Start session ...',
       });
 
-      for (const client of clients) {
-        const { service } = client;
-        const ethAddress = service.getAddress();
+      for (const fileAndClient of fileAndClients) {
+        await onGetGems(fileAndClient.clients);
 
         pushLog({
-          title: `Selected Address: ${ethAddress}`,
+          title: 'Delay 5m ....',
+          type: 'warning',
         });
-
-        let retryCount = 10;
-        while (retryCount > 0) {
-          try {
-            await service.getGem();
-            break;
-          } catch (error: any) {
-            pushLog({
-              title: error.message,
-              type: 'error',
-            });
-            retryCount--;
-            await delay(1000);
-            if (retryCount === 0) {
-              throw new Error(`Failed to getGem after ${retryCount} retries for ${ethAddress}`);
-            }
-          }
-        }
-
-        pushLog({
-          title: `${ethAddress} get 1 Gem success!`,
-          type: 'success',
-        });
+        await delay(300000);
       }
     } catch (error: any) {
       pushLog({
@@ -134,10 +148,6 @@ const GetGemsPage: React.FC = () => {
     }
   };
 
-  const renderClients = useMemo(() => {
-    return clients.map((item, index) => <Alert key={index}>{item.service.getAddress()}</Alert>);
-  }, [clients]);
-
   const renderLogs = useMemo(() => {
     return logs.map((item, index) => (
       <code
@@ -153,15 +163,6 @@ const GetGemsPage: React.FC = () => {
     ));
   }, [logs]);
 
-  useEffect(() => {
-    setClients(
-      clients.map((client) => ({
-        ...client,
-        service: new ImmutableService(selectedNetwork, client.privateKey, client.starkPrivateKey),
-      })),
-    );
-  }, [selectedNetwork]);
-
   return (
     <Box className={styles.root}>
       <Box width="100%">
@@ -169,15 +170,19 @@ const GetGemsPage: React.FC = () => {
           Get Gems
         </Typography>
 
-        {clients.length === 0 ? (
+        {fileAndClients.length === 0 ? (
           <Box>
-            <input type="file" onChange={onChangeFile} accept=".csv, .xlsx" />
+            <input type="file" onChange={onChangeFile} accept=".csv, .xlsx" multiple />
           </Box>
         ) : (
           <Grid container spacing={4}>
             <Grid item xs={4}>
-              <Typography mb={2}>Loaded users</Typography>
-              <Stack spacing={2}>{renderClients}</Stack>
+              <Typography mb={2}>Loaded files</Typography>
+              <Box>
+                {fileAndClients.map((f, i) => (
+                  <Box key={i}>{f.fileName}</Box>
+                ))}
+              </Box>
             </Grid>
 
             <Grid item xs={8}>
