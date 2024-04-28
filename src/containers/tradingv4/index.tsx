@@ -592,7 +592,7 @@ const TradingV4Page: React.FC = () => {
                       type="number"
                       className={styles.gasOptionInput}
                       style={{ marginLeft: 12 }}
-                      value={maxFeePerGas}
+                      value={tmaxFeePerGas}
                       onChange={onChangeTMaxFeePerGas}
                       autoComplete="off"
                     />
@@ -614,7 +614,7 @@ const TradingV4Page: React.FC = () => {
                       type="number"
                       className={styles.gasOptionInput}
                       style={{ marginLeft: 12 }}
-                      value={maxPriorityFeePerGas}
+                      value={tmaxPriorityFeePerGas}
                       onChange={onChangeTMaxPriorityFeePerGas}
                       autoComplete="off"
                     />
@@ -636,7 +636,7 @@ const TradingV4Page: React.FC = () => {
                       type="number"
                       className={styles.gasOptionInput}
                       style={{ marginLeft: 12 }}
-                      value={gasLimit}
+                      value={tgasLimit}
                       onChange={onChangeTGasLimit}
                       autoComplete="off"
                     />

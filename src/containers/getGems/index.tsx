@@ -125,10 +125,10 @@ const GetGemsPage: React.FC = () => {
         await onGetGems(fileAndClient.clients);
 
         pushLog({
-          title: 'Delay 5m ....',
+          title: 'Delay 3m ....',
           type: 'warning',
         });
-        await delay(300000);
+        await delay(180000);
       }
     } catch (error: any) {
       pushLog({
