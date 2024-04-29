@@ -52,11 +52,30 @@ const TradingV2Page: React.FC = () => {
   const [isTradeSubmitting, setIsTradeSubmitting] = useState(false);
   const [isLoadingWallets, setIsLoadingWallets] = useState(false);
 
+  const [maxFeePerGas, setMaxFeePerGas] = useState('50');
+  const [maxPriorityFeePerGas, setMaxPriorityFeePerGas] = useState('25');
+  const [gasLimit, setGasLimit] = useState('300000');
+
   const selectedNetwork = useSelector(sSelectedNetwork);
 
   const onChangeSellAmount = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value;
     setSellAmount(value);
+  };
+
+  const onChangeMaxFeePerGas = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value;
+    setMaxFeePerGas(value);
+  };
+
+  const onChangeMaxPriorityFeePerGas = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value;
+    setMaxPriorityFeePerGas(value);
+  };
+
+  const onChangeGasLimit = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value;
+    setGasLimit(value);
   };
 
   const onChangeFile = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -278,6 +297,12 @@ const TradingV2Page: React.FC = () => {
 
     let retryAttempts = 0;
 
+    const gasOptions = {
+      maxPriorityFeePerGas: maxPriorityFeePerGas ? parseFloat(maxPriorityFeePerGas) * 1e9 : 25e9,
+      maxFeePerGas: maxFeePerGas ? parseFloat(maxFeePerGas) * 1e9 : 50e9,
+      gasLimit: gasLimit ? parseFloat(gasLimit) : 300000,
+    };
+
     while (currentBalance < minRequiredBalance && retryAttempts < retryCount) {
       pushLog(fileName, {
         title: 'Insufficient balance on account, waiting for 1s before retrying...',
@@ -290,12 +315,15 @@ const TradingV2Page: React.FC = () => {
 
     while (retryAttempts < retryCount) {
       try {
-        await service.buy({
-          request: {
-            order_id: orderId as any,
-            user: ethAddress,
+        await service.buy(
+          {
+            request: {
+              order_id: orderId as any,
+              user: ethAddress,
+            },
           },
-        });
+          gasOptions,
+        );
 
         pushLog(fileName, {
           title: `Trade success order ${orderId}`,
@@ -505,6 +533,45 @@ const TradingV2Page: React.FC = () => {
           <Grid item xs={4}>
             {files.length > 0 && (
               <Box mb={4}>
+                <Box mt={2} mb={2}>
+                  Gas options:
+                </Box>
+                <Box mb={1}>
+                  <TextField
+                    size="small"
+                    label="maxFeePerGas"
+                    type="number"
+                    className={styles.gasOptionInput}
+                    value={maxFeePerGas}
+                    onChange={onChangeMaxFeePerGas}
+                    autoComplete="off"
+                  />
+                </Box>
+
+                <Box mb={1}>
+                  <TextField
+                    size="small"
+                    label="maxPriorityFeePerGas"
+                    type="number"
+                    className={styles.gasOptionInput}
+                    value={maxPriorityFeePerGas}
+                    onChange={onChangeMaxPriorityFeePerGas}
+                    autoComplete="off"
+                  />
+                </Box>
+
+                <Box>
+                  <TextField
+                    size="small"
+                    label="gasLimit"
+                    type="number"
+                    className={styles.gasOptionInput}
+                    value={gasLimit}
+                    onChange={onChangeGasLimit}
+                    autoComplete="off"
+                  />
+                </Box>
+
                 <SubmitButton onClick={onLoadWallets} isLoading={isLoadingWallets}>
                   Load wallets
                 </SubmitButton>
