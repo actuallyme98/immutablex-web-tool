@@ -1,18 +1,15 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import clsx from 'clsx';
+import { parseUnits } from 'ethers';
 
 import readXlsxFile from 'read-excel-file';
 
 // components
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
-import Alert from '@mui/material/Alert';
-import Stack from '@mui/material/Stack';
 import Grid from '@mui/material/Grid';
+import TextField from '@mui/material/TextField';
 import SubmitButton from '../../components/SubmitButton';
-
-import { useSelector } from 'react-redux';
-import { sSelectedNetwork } from '../../redux/selectors/app.selector';
 
 // services
 import { ImmutableService } from '../../services';
@@ -34,12 +31,47 @@ type CustomLog = {
 
 const GetGemsPage: React.FC = () => {
   const styles = useStyles();
-  const [files, setFiles] = useState<File[]>([]);
   const [fileAndClients, setFileAndClients] = useState<TradingServiceV3[]>([]);
   const [logs, setLogs] = useState<CustomLog[]>([]);
   const [isTradeSubmitting, setIsTradeSubmitting] = useState(false);
 
-  const selectedNetwork = useSelector(sSelectedNetwork);
+  const [maxFeePerGas, setMaxFeePerGas] = useState('15');
+  const [maxPriorityFeePerGas, setMaxPriorityFeePerGas] = useState('10');
+  const [gasLimit, setGasLimit] = useState('35000');
+
+  const [tmaxFeePerGas, setTMaxFeePerGas] = useState('15');
+  const [tmaxPriorityFeePerGas, setTMaxPriorityFeePerGas] = useState('10');
+  const [tgasLimit, setTGasLimit] = useState('40000');
+
+  const onChangeMaxFeePerGas = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value;
+    setMaxFeePerGas(value);
+  };
+
+  const onChangeMaxPriorityFeePerGas = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value;
+    setMaxPriorityFeePerGas(value);
+  };
+
+  const onChangeGasLimit = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value;
+    setGasLimit(value);
+  };
+
+  const onChangeTMaxFeePerGas = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value;
+    setTMaxFeePerGas(value);
+  };
+
+  const onChangeTMaxPriorityFeePerGas = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value;
+    setTMaxPriorityFeePerGas(value);
+  };
+
+  const onChangeTGasLimit = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value;
+    setTGasLimit(value);
+  };
 
   const onChangeFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const importedFiles = event.target.files || [];
@@ -53,11 +85,7 @@ const GetGemsPage: React.FC = () => {
         return {
           fileName: file.name,
           clients: formattedUsers.map((user) => {
-            const service = new ImmutableService(
-              selectedNetwork,
-              user.privateKey,
-              user.starkPrivateKey,
-            );
+            const service = new ImmutableService('imxZkEVM', user.privateKey, user.starkPrivateKey);
             return {
               ...user,
               service,
@@ -67,7 +95,6 @@ const GetGemsPage: React.FC = () => {
       }),
     );
 
-    setFiles(newFiles);
     setFileAndClients(updatedClients);
 
     event.target.value = '';
@@ -77,19 +104,101 @@ const GetGemsPage: React.FC = () => {
     setLogs((prev) => prev.concat(item));
   };
 
+  const etherToWei = (amount: string) => {
+    return parseUnits(amount, 'ether').toString();
+  };
+
+  const triggerTransfer = async (
+    service: ImmutableService,
+    targetAddress: string,
+    retryCount = 20,
+  ) => {
+    const ethAddress = service.getAddress();
+
+    const minRequiredBalance = '1';
+
+    let retryAttempts = 0;
+
+    pushLog({
+      title: `Starting transfer ${minRequiredBalance} IMX to ${ethAddress}`,
+    });
+
+    const gasOptions = {
+      maxPriorityFeePerGas: tmaxPriorityFeePerGas ? parseFloat(tmaxPriorityFeePerGas) * 1e9 : 10e9,
+      maxFeePerGas: tmaxFeePerGas ? parseFloat(tmaxFeePerGas) * 1e9 : 15e9,
+      gasLimit: tgasLimit ? parseFloat(tgasLimit) : 40000,
+    };
+
+    while (retryAttempts < retryCount) {
+      try {
+        await service.transfer(
+          {
+            request: {
+              type: 'ERC20',
+              receiver: targetAddress,
+              amount: etherToWei(minRequiredBalance),
+              tokenAddress: '',
+            },
+          },
+          gasOptions,
+        );
+
+        pushLog({
+          title: 'Transfer success!',
+          type: 'success',
+        });
+
+        break;
+      } catch (error: any) {
+        retryAttempts++;
+
+        pushLog({
+          title: `Transfer attempt ${retryAttempts} failed: ${error.message}`,
+          type: 'error',
+        });
+
+        if (retryAttempts === retryCount) {
+          pushLog({
+            title: `Maximum retry attempts reached (${retryCount}). Transfer failed.`,
+            type: 'error',
+          });
+
+          throw new Error('Transfer failed after maximum retry attempts.');
+        }
+
+        await delay(1000);
+      }
+    }
+  };
+
   const onGetGems = async (clients: TradingService[]) => {
+    let poolClient = clients[0];
+
     for (const client of clients) {
       const { service } = client;
+      const poolAddress = poolClient.service.getAddress();
       const ethAddress = service.getAddress();
 
       pushLog({
         title: `Selected Address: ${ethAddress}`,
       });
 
+      if (poolAddress !== ethAddress) {
+        await triggerTransfer(poolClient.service, ethAddress);
+      }
+
+      const gasOptions = {
+        maxPriorityFeePerGas: maxPriorityFeePerGas ? parseFloat(maxPriorityFeePerGas) * 1e9 : 10e9,
+        maxFeePerGas: maxFeePerGas ? parseFloat(maxFeePerGas) * 1e9 : 15e9,
+        gasLimit: gasLimit ? parseFloat(gasLimit) : 35000,
+      };
+      console.log('gasOptions', gasOptions);
+
       let retryCount = 10;
       while (retryCount > 0) {
         try {
-          await service.getGem();
+          await service.getGem(gasOptions);
+          poolClient = client;
           break;
         } catch (error: any) {
           pushLog({
@@ -177,6 +286,76 @@ const GetGemsPage: React.FC = () => {
         ) : (
           <Grid container spacing={4}>
             <Grid item xs={4}>
+              <Box mt={2} mb={2}>
+                Gas options (Trade - Transfer)
+              </Box>
+              <Box mb={1}>
+                <TextField
+                  size="small"
+                  label="maxFeePerGas"
+                  type="number"
+                  className={styles.gasOptionInput}
+                  value={maxFeePerGas}
+                  onChange={onChangeMaxFeePerGas}
+                  autoComplete="off"
+                />
+
+                <TextField
+                  size="small"
+                  label="maxFeePerGas"
+                  type="number"
+                  className={styles.gasOptionInput}
+                  style={{ marginLeft: 12 }}
+                  value={tmaxFeePerGas}
+                  onChange={onChangeTMaxFeePerGas}
+                  autoComplete="off"
+                />
+              </Box>
+
+              <Box mb={1}>
+                <TextField
+                  size="small"
+                  label="maxPriorityFeePerGas"
+                  type="number"
+                  className={styles.gasOptionInput}
+                  value={maxPriorityFeePerGas}
+                  onChange={onChangeMaxPriorityFeePerGas}
+                  autoComplete="off"
+                />
+                <TextField
+                  size="small"
+                  label="maxPriorityFeePerGas"
+                  type="number"
+                  className={styles.gasOptionInput}
+                  style={{ marginLeft: 12 }}
+                  value={tmaxPriorityFeePerGas}
+                  onChange={onChangeTMaxPriorityFeePerGas}
+                  autoComplete="off"
+                />
+              </Box>
+
+              <Box>
+                <TextField
+                  size="small"
+                  label="gasLimit"
+                  type="number"
+                  className={styles.gasOptionInput}
+                  value={gasLimit}
+                  onChange={onChangeGasLimit}
+                  autoComplete="off"
+                />
+                <TextField
+                  size="small"
+                  label="gasLimit"
+                  type="number"
+                  className={styles.gasOptionInput}
+                  style={{ marginLeft: 12 }}
+                  value={tgasLimit}
+                  onChange={onChangeTGasLimit}
+                  autoComplete="off"
+                />
+              </Box>
+
               <Typography mb={2}>Loaded files</Typography>
               <Box>
                 {fileAndClients.map((f, i) => (

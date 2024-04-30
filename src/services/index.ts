@@ -360,11 +360,17 @@ export class ImmutableService {
     throw new Error(`${this.selectedNetwork} does not support this method!`);
   }
 
-  async getGem() {
+  async getGem(gasOptions?: any) {
     const { zkEVMSigner } = getzkEVMElements(this.keys);
     const contract = new Contract(ZKEVM_GEM_ADDRESS, ['function earnGem()'], zkEVMSigner as any);
 
-    await contract.earnGem({ maxPriorityFeePerGas: 10e9, maxFeePerGas: 15e9, gasLimit: 35000 });
+    const selectedGasOverrides = gasOptions || {
+      maxPriorityFeePerGas: 10e9,
+      maxFeePerGas: 15e9,
+      gasLimit: 35000,
+    };
+
+    await contract.earnGem(selectedGasOverrides);
     return;
   }
 }
