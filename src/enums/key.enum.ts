@@ -10,4 +10,5 @@ export enum CsvFormattedKeyEnums {
   TOKEN_ID = 'token_id',
   WALLET_NAME = 'wallet_name',
   TARGET_WALLET = 'target_wallet',
+  ADDRESS = 'address',
 }

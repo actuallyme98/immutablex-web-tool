@@ -6,6 +6,7 @@ import SellTab from './sell';
 import TransferTab from './transfer';
 import TransferToMainWalletTab from './transferToMainWallet';
 import TransferToSubWalletsTab from './transferToSubWallet';
+import TransferToSubWalletsV2Tab from './transferToSubWalletV2';
 import GetBalanceTab from './getBalance';
 import ListAssetsTab from './listAssets';
 import GetOrdersTab from './getOrders';
@@ -19,6 +20,7 @@ export type SelectedTab =
   | 'transfer-nft-multiple'
   | 'transfer-to-main-wallet'
   | 'transfer-to-sub-wallets'
+  | 'transfer-to-sub-wallets-v2'
   | 'getBalance'
   | 'listAssets'
   | 'buy'
@@ -45,6 +47,8 @@ const ActionSheets: React.FC<Props> = (props) => {
         return <TransferToMainWalletTab />;
       case 'transfer-to-sub-wallets':
         return <TransferToSubWalletsTab />;
+      case 'transfer-to-sub-wallets-v2':
+        return <TransferToSubWalletsV2Tab />;
       case 'getBalance':
         return <GetBalanceTab />;
       case 'getOrders':

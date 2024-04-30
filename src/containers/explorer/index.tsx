@@ -172,6 +172,10 @@ const menus: MenuItem[] = [
     value: 'transfer-to-sub-wallets',
   },
   {
+    label: 'transferToSubWallets V2 (zkEVM)',
+    value: 'transfer-to-sub-wallets-v2',
+  },
+  {
     label: 'buy',
     value: 'buy',
   },

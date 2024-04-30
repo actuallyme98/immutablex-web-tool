@@ -29,6 +29,9 @@ type CustomLog = {
   type?: 'error' | 'info' | 'warning' | 'success';
 };
 
+const delayTime = 180000;
+const NOT_FOUND_NETWORK_ERROR_MESSAGE = 'could not detect network';
+
 const GetGemsPage: React.FC = () => {
   const styles = useStyles();
   const [fileAndClients, setFileAndClients] = useState<TradingServiceV3[]>([]);
@@ -118,7 +121,7 @@ const GetGemsPage: React.FC = () => {
   const triggerTransfer = async (
     service: ImmutableService,
     targetAddress: string,
-    retryCount = 20,
+    retryCount = 10,
   ) => {
     const ethAddress = service.getAddress();
 
@@ -164,6 +167,10 @@ const GetGemsPage: React.FC = () => {
           type: 'error',
         });
 
+        if (error.message?.includes(NOT_FOUND_NETWORK_ERROR_MESSAGE)) {
+          await delay(delayTime);
+        }
+
         if (retryAttempts === retryCount) {
           pushLog({
             title: `Maximum retry attempts reached (${retryCount}). Transfer failed.`,
@@ -200,7 +207,6 @@ const GetGemsPage: React.FC = () => {
         maxFeePerGas: maxFeePerGas ? parseFloat(maxFeePerGas) * 1e9 : 15e9,
         gasLimit: gasLimit ? parseFloat(gasLimit) : 35000,
       };
-      console.log('gasOptions', gasOptions);
 
       let retryCount = 10;
       while (retryCount > 0) {
@@ -213,6 +219,11 @@ const GetGemsPage: React.FC = () => {
             title: error.message,
             type: 'error',
           });
+
+          if (error.message?.includes(NOT_FOUND_NETWORK_ERROR_MESSAGE)) {
+            await delay(delayTime);
+          }
+
           retryCount--;
           await delay(1000);
           if (retryCount === 0) {
@@ -251,7 +262,7 @@ const GetGemsPage: React.FC = () => {
           title: 'Delay 3m ....',
           type: 'warning',
         });
-        await delay(180000);
+        await delay(delayTime);
       }
     } catch (error: any) {
       pushLog({
