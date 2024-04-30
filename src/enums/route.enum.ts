@@ -8,5 +8,6 @@ export enum AppRouteEnums {
   EXPLORER = '/explorer',
   TRANSFER = '/transfer',
   CLAIM_REWARDS = '/claim-rewards',
-  GET_GEMS = '/get-gems',
+  GET_GEMS_V1 = '/get-gems-v1',
+  GET_GEMS_V2 = '/get-gems-v2',
 }

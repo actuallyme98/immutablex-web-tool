@@ -48,8 +48,12 @@ const HomePage: React.FC = () => {
       path: AppRouteEnums.CLAIM_REWARDS,
     },
     {
-      label: 'Get Gems',
-      path: AppRouteEnums.GET_GEMS,
+      label: 'Get Gems v1',
+      path: AppRouteEnums.GET_GEMS_V1,
+    },
+    {
+      label: 'Get Gems v2',
+      path: AppRouteEnums.GET_GEMS_V2,
     },
   ];
 
@@ -67,7 +71,7 @@ const HomePage: React.FC = () => {
     <Box className={styles.root}>
       <div>
         <Typography variant="h2" className={styles.heading}>
-          ImmutableX Web Tools V2.19.0
+          ImmutableX Web Tools V2.20.0
         </Typography>
 
         <div>

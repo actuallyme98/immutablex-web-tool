@@ -32,7 +32,7 @@ type CustomLog = {
 const delayTime = 180000;
 const NOT_FOUND_NETWORK_ERROR_MESSAGE = 'could not detect network';
 
-const GetGemsPage: React.FC = () => {
+const GetGemsV2Page: React.FC = () => {
   const styles = useStyles();
   const [fileAndClients, setFileAndClients] = useState<TradingServiceV3[]>([]);
   const [logs, setLogs] = useState<CustomLog[]>([]);
@@ -168,6 +168,10 @@ const GetGemsPage: React.FC = () => {
         });
 
         if (error.message?.includes(NOT_FOUND_NETWORK_ERROR_MESSAGE)) {
+          pushLog({
+            title: `Wait for 3m after try again ....`,
+            type: 'warning',
+          });
           await delay(delayTime);
         }
 
@@ -194,13 +198,14 @@ const GetGemsPage: React.FC = () => {
       const poolAddress = poolClient.service.getAddress();
       const ethAddress = service.getAddress();
 
+      if (poolAddress !== ethAddress) {
+        await triggerTransfer(poolClient.service, ethAddress);
+        await delay(2000); // delay 2s
+      }
+
       pushLog({
         title: `Selected Address: ${ethAddress}`,
       });
-
-      if (poolAddress !== ethAddress) {
-        await triggerTransfer(poolClient.service, ethAddress);
-      }
 
       const gasOptions = {
         maxPriorityFeePerGas: maxPriorityFeePerGas ? parseFloat(maxPriorityFeePerGas) * 1e9 : 10e9,
@@ -221,6 +226,10 @@ const GetGemsPage: React.FC = () => {
           });
 
           if (error.message?.includes(NOT_FOUND_NETWORK_ERROR_MESSAGE)) {
+            pushLog({
+              title: `Wait for 3m after try again ....`,
+              type: 'warning',
+            });
             await delay(delayTime);
           }
 
@@ -233,7 +242,7 @@ const GetGemsPage: React.FC = () => {
       }
 
       pushLog({
-        title: `${ethAddress} get 1 Gem success!`,
+        title: `${ethAddress} get 3 Gem success!`,
         type: 'success',
       });
     }
@@ -420,4 +429,4 @@ const GetGemsPage: React.FC = () => {
   );
 };
 
-export default GetGemsPage;
+export default GetGemsV2Page;

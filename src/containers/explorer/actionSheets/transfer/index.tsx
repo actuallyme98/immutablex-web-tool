@@ -8,6 +8,7 @@ import Grid from '@mui/material/Grid';
 import Box from '@mui/material/Box';
 import Divider from '@mui/material/Divider';
 import Typography from '@mui/material/Typography';
+import Autocomplete from '@mui/material/Autocomplete';
 import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import SubmitButton from '../../../../components/SubmitButton';
@@ -23,13 +24,15 @@ import { FormValues, initialValues, validationSchema } from './form';
 // consts
 import { IMX_ADDRESS } from '../../../../constants/imx';
 
+import { toShortAddress } from '../../../../utils/string';
+
 // styles
 import useStyles from './styles';
 
 const TransferTab: React.FC = () => {
   const styles = useStyles();
 
-  const { selectedClient } = useContext(ExplorerContext);
+  const { selectedClient, clients } = useContext(ExplorerContext);
 
   const etherToWei = (amount: string) => {
     return ethers.parseUnits(amount, 'ether').toString();
@@ -85,7 +88,7 @@ const TransferTab: React.FC = () => {
     validationSchema,
   });
 
-  const { values, handleChange, handleSubmit, isValid, isSubmitting, dirty } = form;
+  const { values, handleChange, handleSubmit, setFieldValue, isValid, isSubmitting, dirty } = form;
 
   return (
     <Box>
@@ -126,8 +129,42 @@ const TransferTab: React.FC = () => {
           )}
 
           <Grid item xs={12}>
-            <label className={styles.label}>Receiver</label>
-            <TextField name="receiver" value={values.receiver} onChange={handleChange} />
+            <Box mt={2}>
+              <label className={styles.label}>Receiver</label>
+              <Autocomplete
+                freeSolo
+                options={clients.map((client) => {
+                  const ethAddress = client.service.getAddress();
+
+                  return {
+                    id: client.id,
+                    address: ethAddress,
+                    walletName: `${client.walletName} (${toShortAddress(ethAddress)})`,
+                  };
+                })}
+                onChange={(_, option) => {
+                  if (typeof option === 'string' || !option) {
+                    return;
+                  }
+                  setFieldValue('receiver', option.address);
+                }}
+                getOptionLabel={(option) => {
+                  if (typeof option === 'string') {
+                    return option;
+                  }
+                  return option.walletName || option.address;
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    name="receiver"
+                    value={values.receiver}
+                    onChange={handleChange}
+                  />
+                )}
+                size="small"
+              />
+            </Box>
           </Grid>
 
           <Grid item xs={12}>
