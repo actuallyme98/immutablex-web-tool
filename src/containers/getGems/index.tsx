@@ -35,6 +35,8 @@ const GetGemsPage: React.FC = () => {
   const [logs, setLogs] = useState<CustomLog[]>([]);
   const [isTradeSubmitting, setIsTradeSubmitting] = useState(false);
 
+  const [sellAmount, setSellAmount] = useState('20');
+
   const [maxFeePerGas, setMaxFeePerGas] = useState('15');
   const [maxPriorityFeePerGas, setMaxPriorityFeePerGas] = useState('10');
   const [gasLimit, setGasLimit] = useState('35000');
@@ -42,6 +44,11 @@ const GetGemsPage: React.FC = () => {
   const [tmaxFeePerGas, setTMaxFeePerGas] = useState('15');
   const [tmaxPriorityFeePerGas, setTMaxPriorityFeePerGas] = useState('10');
   const [tgasLimit, setTGasLimit] = useState('40000');
+
+  const onChangeSellAmount = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value;
+    setSellAmount(value);
+  };
 
   const onChangeMaxFeePerGas = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value;
@@ -115,7 +122,7 @@ const GetGemsPage: React.FC = () => {
   ) => {
     const ethAddress = service.getAddress();
 
-    const minRequiredBalance = '1';
+    const minRequiredBalance = sellAmount || '20';
 
     let retryAttempts = 0;
 
@@ -172,6 +179,7 @@ const GetGemsPage: React.FC = () => {
   };
 
   const onGetGems = async (clients: TradingService[]) => {
+    const rootWallet = clients[0];
     let poolClient = clients[0];
 
     for (const client of clients) {
@@ -217,6 +225,12 @@ const GetGemsPage: React.FC = () => {
         title: `${ethAddress} get 1 Gem success!`,
         type: 'success',
       });
+    }
+
+    const rootAddress = rootWallet.service.getAddress();
+    const poolAddress = poolClient.service.getAddress();
+    if (rootAddress !== poolAddress) {
+      await triggerTransfer(poolClient.service, rootAddress);
     }
   };
 
@@ -366,6 +380,16 @@ const GetGemsPage: React.FC = () => {
 
             <Grid item xs={8}>
               <Box>
+                <TextField
+                  size="small"
+                  label="Enter IMX amount"
+                  type="number"
+                  className={styles.amountInput}
+                  value={sellAmount}
+                  onChange={onChangeSellAmount}
+                  autoComplete="off"
+                />
+
                 <SubmitButton
                   variant="contained"
                   onClick={onStartTrade}
