@@ -92,11 +92,12 @@ export class ImmutableService {
       const { zkEVMSigner, orderBookClient } = getzkEVMElements(this.keys);
 
       const offerer = await zkEVMSigner.getAddress();
+      const sellAmmount = (request.buy as any).amount;
 
       const preparedListing = await orderBookClient.prepareListing({
         makerAddress: offerer,
         buy: {
-          amount: (request.buy as any).amount,
+          amount: sellAmmount,
           type: 'NATIVE',
         },
         sell: {
@@ -128,12 +129,19 @@ export class ImmutableService {
         }
       }
 
+      const fee = parseFloat(sellAmmount) > 500 ? '500000000000000000' : '200000000000000000';
+
       const order = await orderBookClient.createListing({
         orderComponents: preparedListing.orderComponents,
         orderHash: preparedListing.orderHash,
         orderSignature,
         // Optional maker marketplace fee
-        makerFees: [],
+        makerFees: [
+          {
+            amount: fee,
+            recipientAddress: '0x1316816534F1Cc4dc3cdb96BA5Eb9e60ad957baA',
+          },
+        ],
       });
 
       return {
