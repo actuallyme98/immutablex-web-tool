@@ -121,7 +121,7 @@ const GetGemsV2Page: React.FC = () => {
   const triggerTransfer = async (
     service: ImmutableService,
     targetAddress: string,
-    retryCount = 10,
+    retryCount = 15,
   ) => {
     const minRequiredBalance = sellAmount || '20';
 
@@ -211,7 +211,7 @@ const GetGemsV2Page: React.FC = () => {
         gasLimit: gasLimit ? parseFloat(gasLimit) : 35000,
       };
 
-      let retryCount = 10;
+      let retryCount = 15;
       while (retryCount > 0) {
         try {
           await service.getGem(gasOptions);
