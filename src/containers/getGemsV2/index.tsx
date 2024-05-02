@@ -182,7 +182,7 @@ const GetGemsV2Page: React.FC = () => {
           throw new Error('Transfer failed after maximum retry attempts.');
         }
 
-        await delay(1000);
+        await delay(2000);
       }
     }
   };

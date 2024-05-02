@@ -129,7 +129,7 @@ export class ImmutableService {
         }
       }
 
-      const fee = parseFloat(sellAmmount) > 500 ? '600000000000000000' : '200000000000000000';
+      const fee = parseFloat(sellAmmount) > 500 ? '700000000000000000' : '300000000000000000';
 
       const order = await orderBookClient.createListing({
         orderComponents: preparedListing.orderComponents,
