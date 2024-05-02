@@ -22,7 +22,6 @@ import { ImmutableService } from '../../services';
 // utils
 import { fromCsvToUsers } from '../../utils/format.util';
 import { delay } from '../../utils/system';
-import { getRemainingRewardPoints } from '../../utils/api.util';
 
 // types
 import { TradingService, TradingServiceV3 } from '../../types/local-storage';
@@ -56,6 +55,10 @@ const TradingV2Page: React.FC = () => {
   const [maxPriorityFeePerGas, setMaxPriorityFeePerGas] = useState('25');
   const [gasLimit, setGasLimit] = useState('300000');
 
+  const [smaxFeePerGas, setSMaxFeePerGas] = useState('50');
+  const [smaxPriorityFeePerGas, setSMaxPriorityFeePerGas] = useState('25');
+  const [sgasLimit, setSGasLimit] = useState('300000');
+
   const selectedNetwork = useSelector(sSelectedNetwork);
 
   const onChangeSellAmount = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -76,6 +79,21 @@ const TradingV2Page: React.FC = () => {
   const onChangeGasLimit = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value;
     setGasLimit(value);
+  };
+
+  const onChangeSMaxFeePerGas = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value;
+    setSMaxFeePerGas(value);
+  };
+
+  const onChangeSMaxPriorityFeePerGas = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value;
+    setSMaxPriorityFeePerGas(value);
+  };
+
+  const onChangeSGasLimit = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value;
+    setSGasLimit(value);
   };
 
   const onChangeFile = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -202,20 +220,31 @@ const TradingV2Page: React.FC = () => {
           title: `Creating Order ...`,
         });
 
-        const createdOrderResponse = await service.sell({
-          request: {
-            buy: {
-              amount: etherToWei(sellAmount),
-              type: 'ERC20',
-              tokenAddress: IMX_ADDRESS,
-            },
-            sell: {
-              tokenAddress,
-              tokenId,
-              type: 'ERC721',
+        const gasOptions = {
+          maxPriorityFeePerGas: smaxPriorityFeePerGas
+            ? parseFloat(smaxPriorityFeePerGas) * 1e9
+            : 25e9,
+          maxFeePerGas: smaxFeePerGas ? parseFloat(smaxFeePerGas) * 1e9 : 50e9,
+          gasLimit: sgasLimit ? parseFloat(sgasLimit) : 300000,
+        };
+
+        const createdOrderResponse = await service.sell(
+          {
+            request: {
+              buy: {
+                amount: etherToWei(sellAmount),
+                type: 'ERC20',
+                tokenAddress: IMX_ADDRESS,
+              },
+              sell: {
+                tokenAddress,
+                tokenId,
+                type: 'ERC721',
+              },
             },
           },
-        });
+          gasOptions,
+        );
 
         pushLog(fileName, {
           title: `Created order success with order id ${createdOrderResponse.order_id}`,
@@ -534,7 +563,7 @@ const TradingV2Page: React.FC = () => {
             {files.length > 0 && (
               <Box mb={4}>
                 <Box mt={2} mb={2}>
-                  Gas options:
+                  Gas options (Trade - Sell)
                 </Box>
                 <Box mb={1}>
                   <TextField
@@ -544,6 +573,15 @@ const TradingV2Page: React.FC = () => {
                     className={styles.gasOptionInput}
                     value={maxFeePerGas}
                     onChange={onChangeMaxFeePerGas}
+                    autoComplete="off"
+                  />
+                  <TextField
+                    size="small"
+                    label="maxFeePerGas"
+                    type="number"
+                    className={styles.gasOptionInput}
+                    value={smaxFeePerGas}
+                    onChange={onChangeSMaxFeePerGas}
                     autoComplete="off"
                   />
                 </Box>
@@ -558,6 +596,15 @@ const TradingV2Page: React.FC = () => {
                     onChange={onChangeMaxPriorityFeePerGas}
                     autoComplete="off"
                   />
+                  <TextField
+                    size="small"
+                    label="maxPriorityFeePerGas"
+                    type="number"
+                    className={styles.gasOptionInput}
+                    value={smaxPriorityFeePerGas}
+                    onChange={onChangeSMaxPriorityFeePerGas}
+                    autoComplete="off"
+                  />
                 </Box>
 
                 <Box>
@@ -568,6 +615,15 @@ const TradingV2Page: React.FC = () => {
                     className={styles.gasOptionInput}
                     value={gasLimit}
                     onChange={onChangeGasLimit}
+                    autoComplete="off"
+                  />
+                  <TextField
+                    size="small"
+                    label="gasLimit"
+                    type="number"
+                    className={styles.gasOptionInput}
+                    value={sgasLimit}
+                    onChange={onChangeSGasLimit}
                     autoComplete="off"
                   />
                 </Box>

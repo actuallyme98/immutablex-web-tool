@@ -35,6 +35,7 @@ const useStyles = makeStyles({
   },
   gasOptionInput: {
     marginBottom: 12,
+    marginRight: 12,
     '& input::-webkit-inner-spin-button, & input::-webkit-outer-spin-button': {
       '-webkit-appearance': 'none',
       margin: 0,

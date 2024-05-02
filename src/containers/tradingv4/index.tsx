@@ -58,6 +58,10 @@ const TradingV4Page: React.FC = () => {
   const [tmaxPriorityFeePerGas, setTMaxPriorityFeePerGas] = useState('25');
   const [tgasLimit, setTGasLimit] = useState('300000');
 
+  const [smaxFeePerGas, setSMaxFeePerGas] = useState('50');
+  const [smaxPriorityFeePerGas, setSMaxPriorityFeePerGas] = useState('25');
+  const [sgasLimit, setSGasLimit] = useState('300000');
+
   const [tradingTime, setTradingTime] = useState('');
   const [isTradeSubmitting, setIsTradeSubmitting] = useState(false);
   const [isLoadingWallets, setIsLoadingWallets] = useState(false);
@@ -106,6 +110,21 @@ const TradingV4Page: React.FC = () => {
   const onChangeTGasLimit = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value;
     setTGasLimit(value);
+  };
+
+  const onChangeSMaxFeePerGas = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value;
+    setSMaxFeePerGas(value);
+  };
+
+  const onChangeSMaxPriorityFeePerGas = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value;
+    setSMaxPriorityFeePerGas(value);
+  };
+
+  const onChangeSGasLimit = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value;
+    setSGasLimit(value);
   };
 
   const onChangeFile = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -237,20 +256,31 @@ const TradingV4Page: React.FC = () => {
           title: `Creating Order ...`,
         });
 
-        const createdOrderResponse = await service.sell({
-          request: {
-            buy: {
-              amount: etherToWei(sellAmount),
-              type: 'ERC20',
-              tokenAddress: IMX_ADDRESS,
-            },
-            sell: {
-              tokenAddress,
-              tokenId,
-              type: 'ERC721',
+        const gasOptions = {
+          maxPriorityFeePerGas: smaxPriorityFeePerGas
+            ? parseFloat(smaxPriorityFeePerGas) * 1e9
+            : 25e9,
+          maxFeePerGas: smaxFeePerGas ? parseFloat(smaxFeePerGas) * 1e9 : 50e9,
+          gasLimit: sgasLimit ? parseFloat(sgasLimit) : 300000,
+        };
+
+        const createdOrderResponse = await service.sell(
+          {
+            request: {
+              buy: {
+                amount: etherToWei(sellAmount),
+                type: 'ERC20',
+                tokenAddress: IMX_ADDRESS,
+              },
+              sell: {
+                tokenAddress,
+                tokenId,
+                type: 'ERC721',
+              },
             },
           },
-        });
+          gasOptions,
+        );
 
         pushLog(fileName, {
           title: `Created order success with order id ${createdOrderResponse.order_id}`,
@@ -641,6 +671,39 @@ const TradingV4Page: React.FC = () => {
                       autoComplete="off"
                     />
                   </Box>
+                </Box>
+
+                <Box>
+                  <Box mb={2}>------------Sell------------------</Box>
+                  <TextField
+                    size="small"
+                    label="maxFeePerGas"
+                    type="number"
+                    className={styles.gasOptionInput}
+                    value={smaxFeePerGas}
+                    onChange={onChangeSMaxFeePerGas}
+                    autoComplete="off"
+                  />
+                  <br />
+                  <TextField
+                    size="small"
+                    label="maxPriorityFeePerGas"
+                    type="number"
+                    className={styles.gasOptionInput}
+                    value={smaxPriorityFeePerGas}
+                    onChange={onChangeSMaxPriorityFeePerGas}
+                    autoComplete="off"
+                  />
+                  <br />
+                  <TextField
+                    size="small"
+                    label="gasLimit"
+                    type="number"
+                    className={styles.gasOptionInput}
+                    value={sgasLimit}
+                    onChange={onChangeSGasLimit}
+                    autoComplete="off"
+                  />
                 </Box>
 
                 <SubmitButton

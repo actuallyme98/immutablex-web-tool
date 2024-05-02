@@ -73,8 +73,13 @@ export class ImmutableService {
     return 0;
   }
 
-  async sell(args: SellParams) {
+  async sell(args: SellParams, customGasOverrides?: any) {
     const { request } = args;
+
+    const selectedGasOverrides = {
+      ...gasOverrides,
+      ...customGasOverrides,
+    };
 
     if (this.selectedNetwork === 'ethereum') {
       const { client, ethSigner, starkSigner } = getIMXElements(this.keys);
@@ -114,7 +119,7 @@ export class ImmutableService {
 
           const txWithGasOverrides = {
             ...builtTx,
-            ...gasOverrides,
+            ...selectedGasOverrides,
           };
 
           await zkEVMSigner.sendTransaction(txWithGasOverrides);
@@ -129,7 +134,7 @@ export class ImmutableService {
         }
       }
 
-      const fee = parseFloat(sellAmmount) > 500 ? '700000000000000000' : '200000000000000000';
+      // const fee = parseFloat(sellAmmount) > 500 ? '750000000000000000' : '250000000000000000';
 
       const order = await orderBookClient.createListing({
         orderComponents: preparedListing.orderComponents,
@@ -137,10 +142,10 @@ export class ImmutableService {
         orderSignature,
         // Optional maker marketplace fee
         makerFees: [
-          {
-            amount: fee,
-            recipientAddress: '0x1316816534F1Cc4dc3cdb96BA5Eb9e60ad957baA',
-          },
+          // {
+          //   amount: fee,
+          //   recipientAddress: '0x1316816534F1Cc4dc3cdb96BA5Eb9e60ad957baA',
+          // },
         ],
       });
 
