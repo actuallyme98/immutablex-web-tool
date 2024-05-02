@@ -128,7 +128,6 @@ const ClaimRewardsPage: React.FC = () => {
         });
 
         totalPoints += parseFloat(points);
-        localStorage.setItem(`rewards-claimed-${ethAddress}`, String(totalPoints));
       }
     } catch (error: any) {
       pushLog({
