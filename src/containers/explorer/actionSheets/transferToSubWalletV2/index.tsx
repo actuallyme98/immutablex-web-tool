@@ -31,11 +31,15 @@ import { TradingService } from '../../../../types/local-storage';
 
 // styles
 import useStyles from './styles';
+import { delay } from '../../../../utils/system';
 
 type CustomLog = {
   title: string;
   type?: 'error' | 'info' | 'warning' | 'success';
 };
+
+const delayTime = 180000;
+const NOT_FOUND_NETWORK_ERROR_MESSAGE = 'could not detect network';
 
 const TransferToSubWalletsV2Tab: React.FC = () => {
   const [clients, setClients] = useState<TradingService[]>([]);
@@ -100,56 +104,76 @@ const TransferToSubWalletsV2Tab: React.FC = () => {
       setIsTradeSubmitting(true);
 
       for (const client of clients) {
-        try {
-          const { service } = selectedClient;
-          const { targetWallet } = client;
-          const ethAddress = service.getAddress();
+        const { service } = selectedClient;
+        const { targetWallet } = client;
+        const ethAddress = service.getAddress();
 
-          pushLog({
-            title: `Select address: ${ethAddress}`,
-          });
+        pushLog({
+          title: `Select address: ${ethAddress}`,
+        });
 
-          if (!targetWallet) {
-            pushLog({
-              title: `Missing target_wallet`,
-              type: 'warning',
-            });
-            continue;
-          }
-
+        if (!targetWallet) {
           pushLog({
-            title: `Starting transfer ${amount} IMX to ${targetWallet}`,
-          });
-
-          await service.transfer(
-            {
-              request: {
-                receiver: targetWallet,
-                amount: etherToWei(amount),
-                type: 'ERC20',
-                tokenAddress: IMX_ADDRESS,
-              },
-            },
-            {
-              maxPriorityFeePerGas: 25e9,
-              maxFeePerGas: 25e9,
-              gasLimit: 50000,
-            },
-          );
-
-          pushLog({
-            title: 'Transfer success!',
-            type: 'success',
-          });
-        } catch (error: any) {
-          pushLog({
-            title: error.message,
-            type: 'error',
-          });
-          pushLog({
-            title: `Skip current client`,
+            title: `Missing target_wallet`,
             type: 'warning',
           });
+          continue;
+        }
+
+        pushLog({
+          title: `Starting transfer ${amount} IMX to ${targetWallet}`,
+        });
+
+        let retryCount = 0;
+        const maxRetries = 10;
+
+        while (retryCount < maxRetries) {
+          try {
+            await service.transfer(
+              {
+                request: {
+                  receiver: targetWallet,
+                  amount: etherToWei(amount),
+                  type: 'ERC20',
+                  tokenAddress: IMX_ADDRESS,
+                },
+              },
+              {
+                maxPriorityFeePerGas: 25e9,
+                maxFeePerGas: 25e9,
+                gasLimit: 50000,
+              },
+            );
+            pushLog({
+              title: 'Transfer success!',
+              type: 'success',
+            });
+            break; // Exit the retry loop if transfer is successful
+          } catch (error: any) {
+            pushLog({
+              title: `Error occurred during transfer: ${error.message}`,
+              type: 'error',
+            });
+
+            if (error.message?.includes(NOT_FOUND_NETWORK_ERROR_MESSAGE)) {
+              pushLog({
+                title: `Wait for 3m after try again ....`,
+                type: 'warning',
+              });
+              await delay(delayTime);
+            }
+
+            retryCount++;
+            await delay(1000);
+          }
+        }
+
+        if (retryCount === maxRetries) {
+          pushLog({
+            title: `Transfer failed after ${maxRetries} retries.`,
+            type: 'error',
+          });
+
           continue;
         }
       }

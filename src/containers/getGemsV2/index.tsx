@@ -123,14 +123,12 @@ const GetGemsV2Page: React.FC = () => {
     targetAddress: string,
     retryCount = 10,
   ) => {
-    const ethAddress = service.getAddress();
-
     const minRequiredBalance = sellAmount || '20';
 
     let retryAttempts = 0;
 
     pushLog({
-      title: `Starting transfer ${minRequiredBalance} IMX to ${ethAddress}`,
+      title: `Starting transfer ${minRequiredBalance} IMX to ${targetAddress}`,
     });
 
     const gasOptions = {

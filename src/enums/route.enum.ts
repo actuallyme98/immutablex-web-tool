@@ -10,4 +10,5 @@ export enum AppRouteEnums {
   CLAIM_REWARDS = '/claim-rewards',
   GET_GEMS_V1 = '/get-gems-v1',
   GET_GEMS_V2 = '/get-gems-v2',
+  GENERATE_ETH_ACCOUNTS = '/generate-eth-accounts',
 }

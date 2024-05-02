@@ -18,6 +18,7 @@ import TransferPage from './containers/transfer';
 import ClaimRewardsPage from './containers/claimRewards';
 import GetGemsV1Page from './containers/getGemsV1';
 import GetGemsV2Page from './containers/getGemsV2';
+import GenerateEthAccounts from './containers/generateEthAccounts';
 
 // contexts
 import { ExplorerContextProvider } from './containers/explorer/contexts';
@@ -85,6 +86,10 @@ const MainApp: React.FC = () => {
         {
           path: AppRouteEnums.TRANSFER,
           element: <TransferPage />,
+        },
+        {
+          path: AppRouteEnums.GENERATE_ETH_ACCOUNTS,
+          element: <GenerateEthAccounts />,
         },
       ],
     },
