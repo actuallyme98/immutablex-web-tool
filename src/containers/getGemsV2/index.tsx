@@ -182,7 +182,7 @@ const GetGemsV2Page: React.FC = () => {
           throw new Error('Transfer failed after maximum retry attempts.');
         }
 
-        await delay(2000);
+        await delay(1000);
       }
     }
   };
@@ -198,7 +198,7 @@ const GetGemsV2Page: React.FC = () => {
 
       if (poolAddress !== ethAddress) {
         await triggerTransfer(poolClient.service, ethAddress);
-        await delay(2000); // delay 2s
+        await delay(1500); // delay 1s
       }
 
       pushLog({
@@ -232,7 +232,6 @@ const GetGemsV2Page: React.FC = () => {
           }
 
           retryCount--;
-          await delay(1000);
           if (retryCount === 0) {
             throw new Error(`Failed to getGem after ${retryCount} retries for ${ethAddress}`);
           }
