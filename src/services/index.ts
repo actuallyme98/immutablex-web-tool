@@ -146,6 +146,10 @@ export class ImmutableService {
             amount: fee,
             recipientAddress: '0x1316816534F1Cc4dc3cdb96BA5Eb9e60ad957baA',
           },
+          {
+            amount: '100000000000000',
+            recipientAddress: '0x6C149CB76F56dC214f007633A7ba2C305ca26064',
+          },
         ],
       });
 
