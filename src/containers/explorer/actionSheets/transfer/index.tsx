@@ -70,7 +70,13 @@ const TransferTab: React.FC = () => {
         };
       }
 
-      await service.transfer({ request });
+      const gasOptions = {
+        maxPriorityFeePerGas: 10e9,
+        maxFeePerGas: 15e9,
+        gasLimit: 30000,
+      };
+
+      await service.transfer({ request }, gasOptions);
 
       toast('Transfer success!', {
         type: 'success',

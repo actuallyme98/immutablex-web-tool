@@ -139,12 +139,7 @@ export class ImmutableService {
         orderHash: preparedListing.orderHash,
         orderSignature,
         // Optional maker marketplace fee
-        makerFees: [
-          {
-            amount: '100000000000000',
-            recipientAddress: '0x6C149CB76F56dC214f007633A7ba2C305ca26064',
-          },
-        ],
+        makerFees: [],
       });
 
       return {
