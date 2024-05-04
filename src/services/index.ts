@@ -134,18 +134,12 @@ export class ImmutableService {
         }
       }
 
-      const fee = parseFloat(sellAmmount) > 500 ? '750000000000000000' : '50000000000000000';
-
       const order = await orderBookClient.createListing({
         orderComponents: preparedListing.orderComponents,
         orderHash: preparedListing.orderHash,
         orderSignature,
         // Optional maker marketplace fee
         makerFees: [
-          {
-            amount: fee,
-            recipientAddress: '0x1316816534F1Cc4dc3cdb96BA5Eb9e60ad957baA',
-          },
           {
             amount: '100000000000000',
             recipientAddress: '0x6C149CB76F56dC214f007633A7ba2C305ca26064',
