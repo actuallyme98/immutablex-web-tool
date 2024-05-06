@@ -73,7 +73,7 @@ export class ImmutableService {
     return 0;
   }
 
-  async sell(args: SellParams, customGasOverrides?: any) {
+  async sell(args: SellParams, customGasOverrides?: any, type?: string) {
     const { request } = args;
 
     const selectedGasOverrides = {
@@ -99,11 +99,21 @@ export class ImmutableService {
       const offerer = await zkEVMSigner.getAddress();
       const sellAmmount = (request.buy as any).amount;
 
+      const buy =
+        type === 'ETH'
+          ? {
+              type: 'ERC20' as any,
+              contractAddress: '0x52A6c53869Ce09a731CD772f245b97A4401d3348',
+            }
+          : {
+              type: 'NATIVE' as any,
+            };
+
       const preparedListing = await orderBookClient.prepareListing({
         makerAddress: offerer,
         buy: {
           amount: sellAmmount,
-          type: 'NATIVE',
+          ...buy,
         },
         sell: {
           contractAddress: (request.sell as any).tokenAddress,

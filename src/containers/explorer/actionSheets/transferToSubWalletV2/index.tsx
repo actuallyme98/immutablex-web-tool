@@ -139,9 +139,9 @@ const TransferToSubWalletsV2Tab: React.FC = () => {
                 },
               },
               {
-                maxPriorityFeePerGas: 25e9,
-                maxFeePerGas: 25e9,
-                gasLimit: 50000,
+                maxPriorityFeePerGas: 10e9,
+                maxFeePerGas: 15e9,
+                gasLimit: 26000,
               },
             );
             pushLog({

@@ -73,7 +73,7 @@ const TransferTab: React.FC = () => {
       const gasOptions = {
         maxPriorityFeePerGas: 10e9,
         maxFeePerGas: 15e9,
-        gasLimit: 30000,
+        gasLimit: 26000,
       };
 
       await service.transfer({ request }, gasOptions);

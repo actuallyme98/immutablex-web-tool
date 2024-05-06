@@ -42,11 +42,11 @@ const GetGemsV2Page: React.FC = () => {
 
   const [maxFeePerGas, setMaxFeePerGas] = useState('15');
   const [maxPriorityFeePerGas, setMaxPriorityFeePerGas] = useState('10');
-  const [gasLimit, setGasLimit] = useState('35000');
+  const [gasLimit, setGasLimit] = useState('26000');
 
   const [tmaxFeePerGas, setTMaxFeePerGas] = useState('15');
   const [tmaxPriorityFeePerGas, setTMaxPriorityFeePerGas] = useState('10');
-  const [tgasLimit, setTGasLimit] = useState('40000');
+  const [tgasLimit, setTGasLimit] = useState('26000');
 
   const onChangeSellAmount = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value;

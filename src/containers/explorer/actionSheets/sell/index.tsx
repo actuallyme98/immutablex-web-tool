@@ -8,6 +8,8 @@ import Box from '@mui/material/Box';
 import Divider from '@mui/material/Divider';
 import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
+import Select from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
 import AddCircleOutlineSharpIcon from '@mui/icons-material/AddCircleOutlineSharp';
 import ClearSharpIcon from '@mui/icons-material/ClearSharp';
 import SubmitButton from '../../../../components/SubmitButton';
@@ -21,7 +23,7 @@ import { useFormik } from 'formik';
 import { FormValues, initialValues, validationSchema } from './form';
 
 // consts
-import { IMX_ADDRESS } from '../../../../constants/imx';
+import { IMX_ADDRESS, ETH_ADDRESS } from '../../../../constants/imx';
 
 // styles
 import useStyles from './styles';
@@ -42,24 +44,28 @@ const SellTab: React.FC = () => {
     try {
       const { service } = selectedClient;
 
-      const response = await service.sell({
-        request: {
-          buy: {
-            amount: etherToWei(values.amount),
-            tokenAddress: IMX_ADDRESS,
-            type: 'ERC20',
+      const response = await service.sell(
+        {
+          request: {
+            buy: {
+              amount: etherToWei(values.amount),
+              tokenAddress: IMX_ADDRESS,
+              type: 'ERC20',
+            },
+            sell: {
+              tokenAddress: values.collectionAddress,
+              tokenId: values.tokenId,
+              type: 'ERC721',
+            },
+            fees: values.fees.map((item) => ({
+              address: item.address,
+              fee_percentage: parseFloat(item.fee_percentage),
+            })),
           },
-          sell: {
-            tokenAddress: values.collectionAddress,
-            tokenId: values.tokenId,
-            type: 'ERC721',
-          },
-          fees: values.fees.map((item) => ({
-            address: item.address,
-            fee_percentage: parseFloat(item.fee_percentage),
-          })),
         },
-      });
+        undefined,
+        values.type,
+      );
 
       setOrderId(String(response.order_id));
     } catch (error: any) {
@@ -130,6 +136,13 @@ const SellTab: React.FC = () => {
       <Divider />
       <form onSubmit={handleSubmit}>
         <Grid container spacing={2} mt={0}>
+          <Grid item xs={12}>
+            <Select name="type" size="small" value={values.type} onChange={handleChange}>
+              <MenuItem value="IMX">IMX</MenuItem>
+              <MenuItem value="ETH">ETH</MenuItem>
+            </Select>
+          </Grid>
+
           <Grid item xs={12}>
             <label className={styles.label}>Collection Address</label>
             <TextField

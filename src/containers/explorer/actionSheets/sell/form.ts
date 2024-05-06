@@ -6,6 +6,7 @@ type FeeRow = {
 };
 
 export type FormValues = {
+  type: 'ETH' | 'IMX';
   collectionAddress: string;
   tokenId: string;
   amount: string;
@@ -13,6 +14,7 @@ export type FormValues = {
 };
 
 export const initialValues: FormValues = {
+  type: 'IMX',
   collectionAddress: '',
   tokenId: '',
   amount: '',
