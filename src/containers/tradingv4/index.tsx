@@ -12,6 +12,8 @@ import Alert from '@mui/material/Alert';
 import Stack from '@mui/material/Stack';
 import Grid from '@mui/material/Grid';
 import TextField from '@mui/material/TextField';
+import Select, { SelectChangeEvent } from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
 import SubmitButton from '../../components/SubmitButton';
 
 import { useSelector } from 'react-redux';
@@ -49,6 +51,7 @@ const TradingV4Page: React.FC = () => {
   const [files, setFiles] = useState<File[]>([]);
   const [fileAndClients, setFileAndClients] = useState<TradingServiceV3[]>([]);
   const [logs, setLogs] = useState<Logs[]>([]);
+  const [sellType, setSellType] = useState('IMX');
   const [sellAmount, setSellAmount] = useState('');
   const [maxFeePerGas, setMaxFeePerGas] = useState('50');
   const [maxPriorityFeePerGas, setMaxPriorityFeePerGas] = useState('25');
@@ -71,6 +74,11 @@ const TradingV4Page: React.FC = () => {
   const onChangeSellAmount = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value;
     setSellAmount(value);
+  };
+
+  const onChangeSellType = (event: SelectChangeEvent<string>) => {
+    const value = event.target.value;
+    setSellType(value);
   };
 
   const onChangeTradingTimeInput = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -280,6 +288,7 @@ const TradingV4Page: React.FC = () => {
             },
           },
           gasOptions,
+          sellType,
         );
 
         pushLog(fileName, {
@@ -719,6 +728,13 @@ const TradingV4Page: React.FC = () => {
           </Grid>
 
           <Grid item xs={8}>
+            <Box mb={2}>
+              <Select name="type" size="small" value={sellType} onChange={onChangeSellType}>
+                <MenuItem value="IMX">IMX</MenuItem>
+                <MenuItem value="ETH">ETH</MenuItem>
+              </Select>
+            </Box>
+
             <Box mb={2}>
               <input type="time" value={tradingTime} step={1} onChange={onChangeTradingTimeInput} />
 
