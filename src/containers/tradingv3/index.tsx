@@ -197,38 +197,38 @@ const TradingV3Page: React.FC = () => {
   //   return updatedClients;
   // };
 
-  const retryGetBalance = async (service: ImmutableService, retryCount = 50, fileName: string) => {
-    let retryAttempts = 0;
+  // const retryGetBalance = async (service: ImmutableService, retryCount = 50, fileName: string) => {
+  //   let retryAttempts = 0;
 
-    while (retryAttempts < retryCount) {
-      try {
-        const balanceResponse = await service.getBalance();
-        return parseFloat(balanceResponse?.balance || '0');
-      } catch (error) {
-        retryAttempts++;
-        pushLog(fileName, {
-          title: `Error fetching balance. Retry attempt ${retryAttempts} out of ${retryCount}`,
-          type: 'warning',
-        });
-        if (retryAttempts >= retryCount) {
-          pushLog(fileName, {
-            title: `Maximum retry attempts (${retryCount}) reached. Unable to fetch balance.`,
-            type: 'error',
-          });
-          return 0;
-        }
-        await delay(1000); // Wait for 1 seconds
-      }
-    }
+  //   while (retryAttempts < retryCount) {
+  //     try {
+  //       const balanceResponse = await service.getBalance();
+  //       return parseFloat(balanceResponse?.balance || '0');
+  //     } catch (error) {
+  //       retryAttempts++;
+  //       pushLog(fileName, {
+  //         title: `Error fetching balance. Retry attempt ${retryAttempts} out of ${retryCount}`,
+  //         type: 'warning',
+  //       });
+  //       if (retryAttempts >= retryCount) {
+  //         pushLog(fileName, {
+  //           title: `Maximum retry attempts (${retryCount}) reached. Unable to fetch balance.`,
+  //           type: 'error',
+  //         });
+  //         return 0;
+  //       }
+  //       await delay(1000); // Wait for 1 seconds
+  //     }
+  //   }
 
-    return 0;
-  };
+  //   return 0;
+  // };
 
   const triggerBuy = async (
     rootUser: TradingService,
     orderId: number | string,
     ownerClient: TradingService,
-    retryCount = 50,
+    retryCount = 10,
     fileName: string,
   ) => {
     const { service } = rootUser;
@@ -242,25 +242,7 @@ const TradingV3Page: React.FC = () => {
       title: `Selected Address: ${ethAddress}`,
     });
 
-    let currentBalance = await retryGetBalance(service, retryCount, fileName);
-    const minRequiredBalance = parseFloat(sellAmount);
-
-    pushLog(fileName, {
-      title: `${ethAddress} has balanceOf ${currentBalance} IMX`,
-      type: 'info',
-    });
-
     let retryAttempts = 0;
-
-    while (currentBalance < minRequiredBalance && retryAttempts < retryCount) {
-      pushLog(fileName, {
-        title: 'Insufficient balance on account, waiting for 1s before retrying...',
-        type: 'error',
-      });
-      await delay(1000); // Wait for 1 seconds
-      currentBalance = await retryGetBalance(service, retryCount, fileName);
-      retryAttempts++;
-    }
 
     while (retryAttempts < retryCount) {
       try {
@@ -342,7 +324,7 @@ const TradingV3Page: React.FC = () => {
       type: 'success',
     });
 
-    await triggerBuy(rootWallet, createdOrderResponse.order_id, rootClient, 50, fileName);
+    await triggerBuy(rootWallet, createdOrderResponse.order_id, rootClient, 10, fileName);
   };
 
   const tradingv3 = async (fileAndClient: TradingServiceV3) => {
@@ -397,7 +379,7 @@ const TradingV3Page: React.FC = () => {
           type: 'success',
         });
 
-        await triggerBuy(rootWallet, createdOrderResponse.order_id, selectedClient, 50, fileName);
+        await triggerBuy(rootWallet, createdOrderResponse.order_id, selectedClient, 10, fileName);
         rootWallet = selectedClient;
       } catch (error: any) {
         pushLog(fileName, {

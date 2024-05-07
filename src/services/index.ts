@@ -383,7 +383,7 @@ export class ImmutableService {
     const selectedGasOverrides = gasOptions || {
       maxPriorityFeePerGas: 10e9,
       maxFeePerGas: 15e9,
-      gasLimit: 35000,
+      gasLimit: 30000,
     };
 
     await contract.earnGem(selectedGasOverrides);
