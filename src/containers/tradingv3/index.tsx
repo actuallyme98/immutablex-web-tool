@@ -228,7 +228,7 @@ const TradingV3Page: React.FC = () => {
     rootUser: TradingService,
     orderId: number | string,
     ownerClient: TradingService,
-    retryCount = 10,
+    retryCount = 20,
     fileName: string,
   ) => {
     const { service } = rootUser;
@@ -264,21 +264,21 @@ const TradingV3Page: React.FC = () => {
           type: 'error',
         });
 
-        if (error.message?.includes('not found')) {
-          pushLog(fileName, {
-            title: 'Creating order again ...',
-            type: 'warning',
-          });
+        // if (error.message?.includes('not found')) {
+        //   pushLog(fileName, {
+        //     title: 'Creating order again ...',
+        //     type: 'warning',
+        //   });
 
-          await triggerLastTx(ownerClient, rootUser, fileName);
-        } else {
-          retryAttempts++;
-          pushLog(fileName, {
-            title: `Retry attempt ${retryAttempts} out of ${retryCount}, waiting for 1s before retrying...`,
-            type: 'warning',
-          });
-          await delay(1000); // Wait for 2 seconds
-        }
+        //   await triggerLastTx(ownerClient, rootUser, fileName);
+        // } else {
+        retryAttempts++;
+        pushLog(fileName, {
+          title: `Retry attempt ${retryAttempts} out of ${retryCount}, waiting for 1s before retrying...`,
+          type: 'warning',
+        });
+        await delay(1000); // Wait for 2 seconds
+        // }
       }
     }
 
@@ -379,14 +379,14 @@ const TradingV3Page: React.FC = () => {
           type: 'success',
         });
 
-        await triggerBuy(rootWallet, createdOrderResponse.order_id, selectedClient, 10, fileName);
+        await triggerBuy(rootWallet, createdOrderResponse.order_id, selectedClient, 20, fileName);
         rootWallet = selectedClient;
       } catch (error: any) {
         pushLog(fileName, {
           title: error.message,
           type: 'error',
         });
-        return;
+        continue;
       }
     }
 
