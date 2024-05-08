@@ -257,7 +257,7 @@ const TradingV3Page: React.FC = () => {
           title: `Trade success order ${orderId}`,
           type: 'success',
         });
-        return;
+        break;
       } catch (error: any) {
         pushLog(fileName, {
           title: error.message,
@@ -347,46 +347,60 @@ const TradingV3Page: React.FC = () => {
     let rootWallet: TradingService = rootClient;
 
     for (const selectedClient of restClients) {
-      try {
-        const { service, tokenAddress, tokenId } = selectedClient;
-        const ethAddress = service.getAddress();
-        pushLog(fileName, {
-          title: `Selected Address: ${ethAddress}`,
-        });
-        if (!tokenAddress || !tokenId) {
+      const MAX_RETRIES = 10;
+      let retryCount = 0;
+
+      while (retryCount < MAX_RETRIES) {
+        try {
+          const { service, tokenAddress, tokenId } = selectedClient;
+          const ethAddress = service.getAddress();
           pushLog(fileName, {
-            title: 'Skip this address because TokenAddress or TokenId are empty',
+            title: `Selected Address: ${ethAddress}`,
           });
-          continue;
+          if (!tokenAddress || !tokenId) {
+            pushLog(fileName, {
+              title: 'Skip this address because TokenAddress or TokenId are empty',
+            });
+            continue;
+          }
+          const createdOrderResponse = await service.sell({
+            request: {
+              buy: {
+                amount: etherToWei(sellAmount),
+                type: 'ERC20',
+                tokenAddress: IMX_ADDRESS,
+              },
+              sell: {
+                tokenAddress,
+                tokenId,
+                type: 'ERC721',
+              },
+            },
+          });
+
+          pushLog(fileName, {
+            title: `Created order success with order id ${createdOrderResponse.order_id}`,
+            type: 'success',
+          });
+
+          await triggerBuy(rootWallet, createdOrderResponse.order_id, selectedClient, 20, fileName);
+          rootWallet = selectedClient;
+
+          break;
+        } catch (error: any) {
+          retryCount++;
+          if (retryCount === MAX_RETRIES) {
+            pushLog(fileName, {
+              title: `Max retries reached. Error: ${error.message}`,
+              type: 'error',
+            });
+          } else {
+            pushLog(fileName, {
+              title: `Error occurred. Retrying (${retryCount}/${MAX_RETRIES}). Error: ${error.message}`,
+              type: 'error',
+            });
+          }
         }
-        const createdOrderResponse = await service.sell({
-          request: {
-            buy: {
-              amount: etherToWei(sellAmount),
-              type: 'ERC20',
-              tokenAddress: IMX_ADDRESS,
-            },
-            sell: {
-              tokenAddress,
-              tokenId,
-              type: 'ERC721',
-            },
-          },
-        });
-
-        pushLog(fileName, {
-          title: `Created order success with order id ${createdOrderResponse.order_id}`,
-          type: 'success',
-        });
-
-        await triggerBuy(rootWallet, createdOrderResponse.order_id, selectedClient, 20, fileName);
-        rootWallet = selectedClient;
-      } catch (error: any) {
-        pushLog(fileName, {
-          title: error.message,
-          type: 'error',
-        });
-        continue;
       }
     }
 
