@@ -11,4 +11,6 @@ export enum AppRouteEnums {
   GET_GEMS_V1 = '/get-gems-v1',
   GET_GEMS_V2 = '/get-gems-v2',
   GENERATE_ETH_ACCOUNTS = '/generate-eth-accounts',
+  CHECK_WALLET = '/check-wallet',
+  CHECK_GEM = '/check-gem',
 }

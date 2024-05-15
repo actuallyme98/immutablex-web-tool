@@ -10,7 +10,7 @@ import useStyles from './styles';
 const GenerateEthAccounts = () => {
   const [loading, setLoading] = useState(false);
   const [accounts, setAccounts] = useState<web3.Web3Account[]>([]);
-  const [quantity, setQuantity] = useState('150');
+  const [quantity, setQuantity] = useState('100');
 
   const styles = useStyles();
 

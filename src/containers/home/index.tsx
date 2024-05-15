@@ -59,6 +59,14 @@ const HomePage: React.FC = () => {
       label: 'Generate ETH accounts',
       path: AppRouteEnums.GENERATE_ETH_ACCOUNTS,
     },
+    {
+      label: 'Check Wallet',
+      path: AppRouteEnums.CHECK_WALLET,
+    },
+    {
+      label: 'Check Gem',
+      path: AppRouteEnums.CHECK_GEM,
+    },
   ];
 
   const renderMenuItems = useMemo(() => {
@@ -75,7 +83,7 @@ const HomePage: React.FC = () => {
     <Box className={styles.root}>
       <div>
         <Typography variant="h2" className={styles.heading}>
-          ImmutableX Web Tools V2.22.8
+          ImmutableX Web Tools V2.23.0
         </Typography>
 
         <div>

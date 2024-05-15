@@ -19,6 +19,8 @@ import ClaimRewardsPage from './containers/claimRewards';
 import GetGemsV1Page from './containers/getGemsV1';
 import GetGemsV2Page from './containers/getGemsV2';
 import GenerateEthAccounts from './containers/generateEthAccounts';
+import CheckWalletPage from './containers/checkWallet';
+import CheckGemPage from './containers/checkGem';
 
 // contexts
 import { ExplorerContextProvider } from './containers/explorer/contexts';
@@ -90,6 +92,14 @@ const MainApp: React.FC = () => {
         {
           path: AppRouteEnums.GENERATE_ETH_ACCOUNTS,
           element: <GenerateEthAccounts />,
+        },
+        {
+          path: AppRouteEnums.CHECK_WALLET,
+          element: <CheckWalletPage />,
+        },
+        {
+          path: AppRouteEnums.CHECK_GEM,
+          element: <CheckGemPage />,
         },
       ],
     },
