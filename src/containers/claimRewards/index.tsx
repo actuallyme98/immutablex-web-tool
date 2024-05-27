@@ -116,7 +116,7 @@ const ClaimRewardsPage: React.FC = () => {
             title: 'claimable_amount is less than 0, this wallet can not be proceed next!',
             type: 'error',
           });
-          return;
+          continue;
         }
 
         let retryCount = 2;
