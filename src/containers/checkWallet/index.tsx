@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import clsx from 'clsx';
+import { parseUnits } from 'ethers';
 
 import readXlsxFile from 'read-excel-file';
 
@@ -7,6 +8,7 @@ import readXlsxFile from 'read-excel-file';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Grid from '@mui/material/Grid';
+import TextField from '@mui/material/TextField';
 import SubmitButton from '../../components/SubmitButton';
 
 // services
@@ -35,6 +37,12 @@ const CheckWalletPage: React.FC = () => {
   const [fileAndClients, setFileAndClients] = useState<TradingServiceV3[]>([]);
   const [logs, setLogs] = useState<CustomLog[]>([]);
   const [isTradeSubmitting, setIsTradeSubmitting] = useState(false);
+  const [rootPrivateKey, setRootPrivateKey] = useState('');
+
+  const onChangeRootPrivateKey = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value;
+    setRootPrivateKey(value);
+  };
 
   const onChangeFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const importedFiles = event.target.files || [];
@@ -67,7 +75,91 @@ const CheckWalletPage: React.FC = () => {
     setLogs((prev) => prev.concat(item));
   };
 
+  const etherToWei = (amount: string) => {
+    return parseUnits(amount, 'ether').toString();
+  };
+
+  const triggerTransfer = async (
+    service: ImmutableService,
+    targetAddress: string,
+    retryCount = 15,
+    amount?: string,
+  ) => {
+    const minRequiredBalance = amount || '0.01';
+
+    let retryAttempts = 0;
+
+    pushLog({
+      title: `Starting transfer ${minRequiredBalance} IMX to ${targetAddress}`,
+    });
+
+    const gasOptions = {
+      maxPriorityFeePerGas: 10e9,
+      maxFeePerGas: 15e9,
+      gasLimit: 26000,
+    };
+
+    while (retryAttempts < retryCount) {
+      try {
+        await service.transfer(
+          {
+            request: {
+              type: 'ERC20',
+              receiver: targetAddress,
+              amount: etherToWei(minRequiredBalance),
+              tokenAddress: '',
+            },
+          },
+          gasOptions,
+        );
+
+        pushLog({
+          title: 'Transfer success!',
+          type: 'success',
+        });
+
+        break;
+      } catch (error: any) {
+        retryAttempts++;
+
+        pushLog({
+          title: `Transfer attempt ${retryAttempts} failed: ${error.message}`,
+          type: 'error',
+        });
+
+        if (error.message?.includes(NOT_FOUND_NETWORK_ERROR_MESSAGE)) {
+          pushLog({
+            title: `Wait for 3m after try again ....`,
+            type: 'warning',
+          });
+          await delay(delayTime);
+        }
+
+        if (retryAttempts === retryCount) {
+          pushLog({
+            title: `Maximum retry attempts reached (${retryCount}). Transfer failed.`,
+            type: 'error',
+          });
+
+          throw new Error('Transfer failed after maximum retry attempts.');
+        }
+
+        await delay(1000);
+      }
+    }
+  };
+
   const onCheckWallet = async (clients: TradingService[]) => {
+    if (!rootPrivateKey) {
+      pushLog({
+        title: 'Enter ROOT_PRIVATE_KEY!',
+        type: 'error',
+      });
+      return;
+    }
+
+    const rootService = new ImmutableService('imxZkEVM', rootPrivateKey, '');
+    const rootAddress = rootService.getAddress();
     for (const client of clients) {
       const { service } = client;
       const ethAddress = service.getAddress();
@@ -105,6 +197,18 @@ const CheckWalletPage: React.FC = () => {
             throw new Error(`Failed to getBalance after ${retryCount} retries for ${ethAddress}`);
           }
         }
+      }
+
+      // const remainingBalance = parseFloat(totalBalance) - 0.02 + 0.00046;
+      // if (
+      //   remainingBalance > 0.01 &&
+      //   ethAddress.toLocaleLowerCase() !== rootAddress.toLocaleLowerCase()
+      // ) {
+      //   await triggerTransfer(service, rootAddress, 15, remainingBalance.toFixed(4));
+      // } else
+
+      if (parseFloat(totalBalance) < 0.01) {
+        await triggerTransfer(rootService, ethAddress, 15, '0.01');
       }
 
       const isMatch = parseFloat(totalBalance) > 20;
@@ -219,6 +323,15 @@ const CheckWalletPage: React.FC = () => {
             </Grid>
 
             <Grid item xs={8}>
+              <TextField
+                size="small"
+                label="Enter ROOT_PRIVATE_KEY"
+                className={styles.amountInput}
+                value={rootPrivateKey}
+                onChange={onChangeRootPrivateKey}
+                autoComplete="off"
+              />
+
               <Box>
                 <SubmitButton
                   variant="contained"

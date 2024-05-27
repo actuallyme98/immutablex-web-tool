@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import clsx from 'clsx';
+import * as ethers from 'ethers';
 
 import readXlsxFile from 'read-excel-file';
 
@@ -20,7 +21,7 @@ import { ImmutableService } from '../../services';
 // utils
 import { fromCsvToUsers } from '../../utils/format.util';
 import { delay } from '../../utils/system';
-import { claimPointsForWallet } from '../../utils/api.util';
+import { claimPointsForWallet, checkTradingRewardPoints } from '../../utils/api.util';
 
 // types
 import { TradingService } from '../../types/local-storage';
@@ -40,6 +41,10 @@ const ClaimRewardsPage: React.FC = () => {
   const [isTradeSubmitting, setIsTradeSubmitting] = useState(false);
 
   const selectedNetwork = useSelector(sSelectedNetwork);
+
+  const weiToEther = (unit: string) => {
+    return ethers.formatEther(unit);
+  };
 
   const onChangeFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -96,6 +101,24 @@ const ClaimRewardsPage: React.FC = () => {
           title: `Selected Address: ${ethAddress}`,
         });
 
+        const { claimable_amount, total_earned_amount } = await checkTradingRewardPoints(
+          ethAddress,
+        );
+
+        const totalEarned = weiToEther(total_earned_amount);
+
+        if (parseFloat(claimable_amount) <= 0) {
+          pushLog({
+            title: `Total Earn Amount: ${totalEarned}/1000IMX`,
+            type: 'error',
+          });
+          pushLog({
+            title: 'claimable_amount is less than 0, this wallet can not be proceed next!',
+            type: 'error',
+          });
+          return;
+        }
+
         let retryCount = 2;
         let points = '0';
         while (retryCount > 0) {
@@ -123,7 +146,11 @@ const ClaimRewardsPage: React.FC = () => {
         }
 
         pushLog({
-          title: `Claimed: ${points}`,
+          title: `--------------- Claimed: ${points} --------------`,
+          type: 'success',
+        });
+        pushLog({
+          title: `--------------- Total Earn Amount: ${totalEarned}/1000IMX ---------------`,
           type: 'success',
         });
 

@@ -87,3 +87,11 @@ export const checkGem = async (address: string) => {
   const { data } = await axios.get(`https://api.immutable.com/v1/rewards/gems/${address}`);
   return data;
 };
+
+export const checkTradingRewardPoints = async (address: string) => {
+  const { data } = await axios.get(
+    `https://api.immutable.com/v1/claims/trading-rewards-imtbl-zkevm/${address}`,
+  );
+
+  return data;
+};
