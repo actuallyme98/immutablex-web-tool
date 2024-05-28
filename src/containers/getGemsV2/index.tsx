@@ -38,7 +38,8 @@ const GetGemsV2Page: React.FC = () => {
   const [logs, setLogs] = useState<CustomLog[]>([]);
   const [isTradeSubmitting, setIsTradeSubmitting] = useState(false);
 
-  const [sellAmount, setSellAmount] = useState('20');
+  const [sellAmount, setSellAmount] = useState('1000');
+  const [rootPrivateKey, setRootPrivateKey] = useState('');
 
   const [maxFeePerGas, setMaxFeePerGas] = useState('15');
   const [maxPriorityFeePerGas, setMaxPriorityFeePerGas] = useState('10');
@@ -51,6 +52,11 @@ const GetGemsV2Page: React.FC = () => {
   const onChangeSellAmount = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value;
     setSellAmount(value);
+  };
+
+  const onChangeRootPrivateKey = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value;
+    setRootPrivateKey(value);
   };
 
   const onChangeMaxFeePerGas = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -118,27 +124,61 @@ const GetGemsV2Page: React.FC = () => {
     return parseUnits(amount, 'ether').toString();
   };
 
+  const retryGetBalance = async (service: ImmutableService, retryCount = 15) => {
+    let retryAttempts = 0;
+
+    while (retryAttempts < retryCount) {
+      try {
+        const balanceResponse = await service.getBalance();
+        return parseFloat(balanceResponse?.balance || '0');
+      } catch (error: any) {
+        retryAttempts++;
+        pushLog({
+          title: `Transfer attempt ${retryAttempts} failed: ${error.message}`,
+          type: 'error',
+        });
+
+        pushLog({
+          title: `Wait for 3m after try again ....`,
+          type: 'warning',
+        });
+
+        await delay(delayTime);
+
+        if (retryAttempts >= retryCount) {
+          pushLog({
+            title: `Maximum retry attempts (${retryCount}) reached. Unable to fetch balance.`,
+            type: 'error',
+          });
+          return 0;
+        }
+      }
+    }
+
+    return 0;
+  };
+
   const triggerTransfer = async (
     service: ImmutableService,
     targetAddress: string,
     retryCount = 15,
+    amount?: string,
   ) => {
-    const minRequiredBalance = sellAmount || '20';
+    const minRequiredBalance = amount || sellAmount || '100';
 
     let retryAttempts = 0;
-
-    pushLog({
-      title: `Starting transfer ${minRequiredBalance} IMX to ${targetAddress}`,
-    });
 
     const gasOptions = {
       maxPriorityFeePerGas: tmaxPriorityFeePerGas ? parseFloat(tmaxPriorityFeePerGas) * 1e9 : 10e9,
       maxFeePerGas: tmaxFeePerGas ? parseFloat(tmaxFeePerGas) * 1e9 : 15e9,
-      gasLimit: tgasLimit ? parseFloat(tgasLimit) : 40000,
+      gasLimit: tgasLimit ? parseFloat(tgasLimit) : 26000,
     };
 
     while (retryAttempts < retryCount) {
       try {
+        pushLog({
+          title: `Starting transfer ${minRequiredBalance} IMX to ${targetAddress} with retry ${retryAttempts} ...`,
+        });
         await service.transfer(
           {
             request: {
@@ -182,7 +222,7 @@ const GetGemsV2Page: React.FC = () => {
           throw new Error('Transfer failed after maximum retry attempts.');
         }
 
-        await delay(1000);
+        await delay(2000);
       }
     }
   };
@@ -190,6 +230,42 @@ const GetGemsV2Page: React.FC = () => {
   const onGetGems = async (clients: TradingService[]) => {
     const rootWallet = clients[0];
     let poolClient = clients[0];
+
+    if (!rootPrivateKey) {
+      pushLog({
+        title: 'Enter root_private_key!',
+        type: 'error',
+      });
+      return;
+    }
+
+    const minRequiredBalance = sellAmount || '100';
+
+    const rootService = new ImmutableService('imxZkEVM', rootPrivateKey, '');
+    const rootAddress = rootService.getAddress();
+
+    let currentBalance = await retryGetBalance(rootWallet.service);
+
+    if (currentBalance < parseFloat(minRequiredBalance)) {
+      const currentRootBalance = await retryGetBalance(rootService);
+      if (currentRootBalance < parseFloat(minRequiredBalance)) {
+        return;
+      }
+
+      const rootWalletAddress = rootWallet.service.getAddress();
+      await triggerTransfer(rootService, rootWalletAddress);
+      pushLog({
+        title: 'wait 3s ...',
+        type: 'warning',
+      });
+      await delay(3000);
+
+      currentBalance = await retryGetBalance(rootWallet.service);
+
+      if (currentBalance < parseFloat(minRequiredBalance)) {
+        return;
+      }
+    }
 
     for (const client of clients) {
       const { service } = client;
@@ -239,12 +315,11 @@ const GetGemsV2Page: React.FC = () => {
       }
 
       pushLog({
-        title: `${ethAddress} get 3 Gem success!`,
+        title: `${ethAddress} get 16 Gem success!`,
         type: 'success',
       });
     }
 
-    const rootAddress = rootWallet.service.getAddress();
     const poolAddress = poolClient.service.getAddress();
     if (rootAddress !== poolAddress) {
       await triggerTransfer(poolClient.service, rootAddress);
@@ -397,6 +472,15 @@ const GetGemsV2Page: React.FC = () => {
 
             <Grid item xs={8}>
               <Box>
+                <TextField
+                  size="small"
+                  label="wallet_private_key"
+                  className={styles.amountInput}
+                  value={rootPrivateKey}
+                  onChange={onChangeRootPrivateKey}
+                  autoComplete="off"
+                />
+
                 <TextField
                   size="small"
                   label="Enter IMX amount"
