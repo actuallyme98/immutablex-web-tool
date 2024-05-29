@@ -260,9 +260,24 @@ const GetGemsV2Page: React.FC = () => {
       });
       await delay(3000);
 
-      currentBalance = await retryGetBalance(rootWallet.service);
+      const maxRetries = 3;
+      let retries = 0;
 
-      if (currentBalance < parseFloat(minRequiredBalance)) {
+      while (retries < maxRetries) {
+        currentBalance = await retryGetBalance(rootWallet.service);
+
+        if (currentBalance > parseFloat(minRequiredBalance)) {
+          break;
+        }
+        pushLog({
+          title: `Retry to check balance ... ${retries}, delay 3s`,
+          type: 'error',
+        });
+        retries++;
+        await delay(3000);
+      }
+
+      if (retries === maxRetries) {
         return;
       }
     }
