@@ -10,7 +10,7 @@ import useStyles from './styles';
 const GenerateEthAccounts = () => {
   const [loading, setLoading] = useState(false);
   const [accounts, setAccounts] = useState<web3.Web3Account[]>([]);
-  const [quantity, setQuantity] = useState('100');
+  const [quantity, setQuantity] = useState('150');
 
   const styles = useStyles();
 
@@ -62,6 +62,7 @@ const GenerateEthAccounts = () => {
               key: 'address',
             },
           ]}
+          filename="gem_keys_150-40"
         >
           Download files
         </CSVLink>

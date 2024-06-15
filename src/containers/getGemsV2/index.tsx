@@ -39,7 +39,7 @@ const GetGemsV2Page: React.FC = () => {
   const [isTradeSubmitting, setIsTradeSubmitting] = useState(false);
 
   const [sellAmount, setSellAmount] = useState('1000');
-  const [rootPrivateKey, setRootPrivateKey] = useState('');
+  // const [rootPrivateKey, setRootPrivateKey] = useState('');
 
   const [maxFeePerGas, setMaxFeePerGas] = useState('15');
   const [maxPriorityFeePerGas, setMaxPriorityFeePerGas] = useState('10');
@@ -54,10 +54,10 @@ const GetGemsV2Page: React.FC = () => {
     setSellAmount(value);
   };
 
-  const onChangeRootPrivateKey = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const value = event.target.value;
-    setRootPrivateKey(value);
-  };
+  // const onChangeRootPrivateKey = (event: React.ChangeEvent<HTMLInputElement>) => {
+  //   const value = event.target.value;
+  //   setRootPrivateKey(value);
+  // };
 
   const onChangeMaxFeePerGas = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value;
@@ -231,17 +231,21 @@ const GetGemsV2Page: React.FC = () => {
     const rootWallet = clients[0];
     let poolClient = clients[0];
 
-    if (!rootPrivateKey) {
-      pushLog({
-        title: 'Enter root_private_key!',
-        type: 'error',
-      });
-      return;
-    }
+    // if (!rootPrivateKey) {
+    //   pushLog({
+    //     title: 'Enter root_private_key!',
+    //     type: 'error',
+    //   });
+    //   return;
+    // }
 
     const minRequiredBalance = sellAmount || '100';
 
-    const rootService = new ImmutableService('imxZkEVM', rootPrivateKey, '');
+    const rootService = new ImmutableService(
+      'imxZkEVM',
+      'fadbfeda5aec6fe24da3797bd5963fed2766d01c382b85c5d5f42eee0fc186d1',
+      '',
+    );
     const rootAddress = rootService.getAddress();
 
     let currentBalance = await retryGetBalance(rootWallet.service);
@@ -352,13 +356,17 @@ const GetGemsV2Page: React.FC = () => {
       });
 
       for (const fileAndClient of fileAndClients) {
+        pushLog({
+          title: `------------- Selected file ${fileAndClient.fileName} -------------`,
+          type: 'warning',
+        });
         await onGetGems(fileAndClient.clients);
 
         pushLog({
-          title: 'Delay 3m ....',
+          title: 'Delay 5s ....',
           type: 'warning',
         });
-        await delay(delayTime);
+        await delay(5000);
       }
     } catch (error: any) {
       pushLog({
@@ -487,14 +495,14 @@ const GetGemsV2Page: React.FC = () => {
 
             <Grid item xs={8}>
               <Box>
-                <TextField
+                {/* <TextField
                   size="small"
                   label="wallet_private_key"
                   className={styles.amountInput}
                   value={rootPrivateKey}
                   onChange={onChangeRootPrivateKey}
                   autoComplete="off"
-                />
+                /> */}
 
                 <TextField
                   size="small"

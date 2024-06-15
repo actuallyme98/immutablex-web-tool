@@ -37,12 +37,12 @@ const CheckWalletPage: React.FC = () => {
   const [fileAndClients, setFileAndClients] = useState<TradingServiceV3[]>([]);
   const [logs, setLogs] = useState<CustomLog[]>([]);
   const [isTradeSubmitting, setIsTradeSubmitting] = useState(false);
-  const [rootPrivateKey, setRootPrivateKey] = useState('');
+  // const [rootPrivateKey, setRootPrivateKey] = useState('');
 
-  const onChangeRootPrivateKey = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const value = event.target.value;
-    setRootPrivateKey(value);
-  };
+  // const onChangeRootPrivateKey = (event: React.ChangeEvent<HTMLInputElement>) => {
+  //   const value = event.target.value;
+  //   setRootPrivateKey(value);
+  // };
 
   const onChangeFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const importedFiles = event.target.files || [];
@@ -150,15 +150,19 @@ const CheckWalletPage: React.FC = () => {
   };
 
   const onCheckWallet = async (clients: TradingService[]) => {
-    if (!rootPrivateKey) {
-      pushLog({
-        title: 'Enter ROOT_PRIVATE_KEY!',
-        type: 'error',
-      });
-      return;
-    }
+    // if (!rootPrivateKey) {
+    //   pushLog({
+    //     title: 'Enter ROOT_PRIVATE_KEY!',
+    //     type: 'error',
+    //   });
+    //   return;
+    // }
 
-    const rootService = new ImmutableService('imxZkEVM', rootPrivateKey, '');
+    const rootService = new ImmutableService(
+      'imxZkEVM',
+      'fadbfeda5aec6fe24da3797bd5963fed2766d01c382b85c5d5f42eee0fc186d1',
+      '',
+    );
     const rootAddress = rootService.getAddress();
     for (const client of clients) {
       const { service } = client;
@@ -199,15 +203,13 @@ const CheckWalletPage: React.FC = () => {
         }
       }
 
-      // const remainingBalance = parseFloat(totalBalance) - 0.02 + 0.00046;
-      // if (
-      //   remainingBalance > 0.01 &&
-      //   ethAddress.toLocaleLowerCase() !== rootAddress.toLocaleLowerCase()
-      // ) {
-      //   await triggerTransfer(service, rootAddress, 15, remainingBalance.toFixed(4));
-      // } else
-
-      if (parseFloat(totalBalance) < 0.01) {
+      const remainingBalance = parseFloat(totalBalance) - 0.02 + 0.00046;
+      if (
+        remainingBalance > 0.01 &&
+        ethAddress.toLocaleLowerCase() !== rootAddress.toLocaleLowerCase()
+      ) {
+        await triggerTransfer(service, rootAddress, 15, remainingBalance.toFixed(4));
+      } else if (parseFloat(totalBalance) < 0.01) {
         await triggerTransfer(rootService, ethAddress, 15, '0.01');
       }
 
@@ -323,14 +325,14 @@ const CheckWalletPage: React.FC = () => {
             </Grid>
 
             <Grid item xs={8}>
-              <TextField
+              {/* <TextField
                 size="small"
                 label="Enter ROOT_PRIVATE_KEY"
                 className={styles.amountInput}
                 value={rootPrivateKey}
                 onChange={onChangeRootPrivateKey}
                 autoComplete="off"
-              />
+              /> */}
 
               <Box>
                 <SubmitButton
