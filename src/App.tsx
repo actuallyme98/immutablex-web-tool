@@ -21,6 +21,7 @@ import GetGemsV2Page from './containers/getGemsV2';
 import GenerateEthAccounts from './containers/generateEthAccounts';
 import CheckWalletPage from './containers/checkWallet';
 import CheckGemPage from './containers/checkGem';
+import TradingRewardGem from './containers/trading-reward-gem';
 
 // contexts
 import { ExplorerContextProvider } from './containers/explorer/contexts';
@@ -100,6 +101,10 @@ const MainApp: React.FC = () => {
         {
           path: AppRouteEnums.CHECK_GEM,
           element: <CheckGemPage />,
+        },
+        {
+          path: AppRouteEnums.TRADING_REWARD_GEMS,
+          element: <TradingRewardGem />,
         },
       ],
     },
