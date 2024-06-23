@@ -67,6 +67,10 @@ const HomePage: React.FC = () => {
       label: 'Check Gem',
       path: AppRouteEnums.CHECK_GEM,
     },
+    {
+      label: 'Trading reward gems',
+      path: AppRouteEnums.TRADING_REWARD_GEMS,
+    },
   ];
 
   const renderMenuItems = useMemo(() => {
