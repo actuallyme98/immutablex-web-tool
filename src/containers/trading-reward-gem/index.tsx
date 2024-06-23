@@ -39,9 +39,7 @@ const TradingRewardGem: React.FC = () => {
   const [logs, setLogs] = useState<CustomLog[]>([]);
   const [isTradeSubmitting, setIsTradeSubmitting] = useState(false);
 
-  const [rootPrivateKey, setRootPrivateKey] = useState(
-    'fadbfeda5aec6fe24da3797bd5963fed2766d01c382b85c5d5f42eee0fc186d1',
-  );
+  const [rootPrivateKey, setRootPrivateKey] = useState('');
   const [contractAddress, setContractAddress] = useState(
     '0x0e95d13ee02b758a015dc72697b3284e3fc7bfd8',
   );
