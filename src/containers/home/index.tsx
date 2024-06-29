@@ -87,7 +87,7 @@ const HomePage: React.FC = () => {
     <Box className={styles.root}>
       <div>
         <Typography variant="h2" className={styles.heading}>
-          ImmutableX Web Tools V2.23.4
+          ImmutableX Web Tools V2.23.5
         </Typography>
 
         <div>
