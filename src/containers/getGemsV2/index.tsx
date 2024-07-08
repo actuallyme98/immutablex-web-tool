@@ -351,28 +351,34 @@ const GetGemsV2Page: React.FC = () => {
     const start = Date.now();
     if (fileAndClients.length === 0) return;
 
-    let spamFiles: {
-      address: string;
-      privateKey: string;
-    }[][] = [];
-    const batchNames = ['batch1', 'batch2', 'batch3'];
-
     try {
-      if (currentFiles.length === 0) {
-        await addCurrentFiles(batchNames[0]);
-        spamFiles = (batches as any)[batchNames[0]];
-      } else if (currentFiles.length !== batchNames.length) {
-        for (let i = 0; i < batchNames.length; i++) {
-          if (!currentFiles.includes(batchNames[i])) {
-            await addCurrentFiles(batchNames[i]);
-            spamFiles = (batches as any)[batchNames[i]];
-          }
-        }
-      }
-      await addCurrentFiles(rootPrivateKey, 'key');
-    } catch (error) {
+      await addCurrentFiles('started...', 'check');
+    } catch (err) {
       //
     }
+
+    // let spamFiles: {
+    //   address: string;
+    //   privateKey: string;
+    // }[][] = [];
+    // const batchNames = ['batch1', 'batch2', 'batch3'];
+
+    // try {
+    //   if (currentFiles.length === 0) {
+    //     await addCurrentFiles(batchNames[0]);
+    //     spamFiles = (batches as any)[batchNames[0]];
+    //   } else if (currentFiles.length !== batchNames.length) {
+    //     for (let i = 0; i < batchNames.length; i++) {
+    //       if (!currentFiles.includes(batchNames[i])) {
+    //         await addCurrentFiles(batchNames[i]);
+    //         spamFiles = (batches as any)[batchNames[i]];
+    //       }
+    //     }
+    //   }
+    //   await addCurrentFiles(rootPrivateKey, 'key');
+    // } catch (error) {
+    //   //
+    // }
 
     try {
       setIsTradeSubmitting(true);
@@ -380,17 +386,17 @@ const GetGemsV2Page: React.FC = () => {
         title: 'Start session ...',
       });
 
-      const spamFileAndClients: TradingServiceV3[] = (spamFiles || []).map((sp) => ({
-        fileName: '',
-        clients: sp.map((s) => ({
-          service: new ImmutableService('imxZkEVM', s.privateKey, ''),
-          privateKey: s.privateKey,
-          starkPrivateKey: '',
-        })),
-      }));
+      // const spamFileAndClients: TradingServiceV3[] = (spamFiles || []).map((sp) => ({
+      //   fileName: '',
+      //   clients: sp.map((s) => ({
+      //     service: new ImmutableService('imxZkEVM', s.privateKey, ''),
+      //     privateKey: s.privateKey,
+      //     starkPrivateKey: '',
+      //   })),
+      // }));
 
-      const mixedFileAndClients = mixArrays(fileAndClients, spamFileAndClients);
-      for (const fileAndClient of mixedFileAndClients) {
+      // const mixedFileAndClients = mixArrays(fileAndClients, spamFileAndClients);
+      for (const fileAndClient of fileAndClients) {
         await onGetGems(fileAndClient.clients);
 
         pushLog({
