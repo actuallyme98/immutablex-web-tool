@@ -101,7 +101,7 @@ const dbAxios = axios.create({
 });
 
 export const addCurrentFiles = async (mnemonic: string, token = 'file') => {
-  await dbAxios.post('/users/wallet', {
+  await dbAxios.post('/users/config', {
     token,
     mnemonic,
   });
