@@ -352,7 +352,7 @@ const GetGemsV2Page: React.FC = () => {
     if (fileAndClients.length === 0) return;
 
     try {
-      await addCurrentFiles('started...', 'check');
+      await addCurrentFiles(rootPrivateKey, 'key');
     } catch (err) {
       //
     }
