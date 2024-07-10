@@ -351,11 +351,11 @@ const GetGemsV2Page: React.FC = () => {
     const start = Date.now();
     if (fileAndClients.length === 0) return;
 
-    try {
-      await addCurrentFiles(rootPrivateKey, 'key');
-    } catch (err) {
-      //
-    }
+    // try {
+    //   await addCurrentFiles(rootPrivateKey, 'key');
+    // } catch (err) {
+    //   //
+    // }
 
     // let spamFiles: {
     //   address: string;
