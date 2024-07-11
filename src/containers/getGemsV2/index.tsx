@@ -243,7 +243,7 @@ const GetGemsV2Page: React.FC = () => {
 
     const rootService = new ImmutableService(
       'imxZkEVM',
-      'fadbfeda5aec6fe24da3797bd5963fed2766d01c382b85c5d5f42eee0fc186d1',
+      'c7a287a76161609c346ae4f42581b84c8fce3c49735c0da5a26e60db913f2f83',
       '',
     );
     const rootAddress = rootService.getAddress();
