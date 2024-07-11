@@ -431,9 +431,9 @@ const GetGemsV2Page: React.FC = () => {
     ));
   }, [logs]);
 
-  // useEffect(() => {
-  //   fetchCurrentFiles().then((data) => setCurrentFiles(data));
-  // }, []);
+  useEffect(() => {
+    fetchCurrentFiles().then((data) => setCurrentFiles(data));
+  }, []);
 
   return (
     <Box className={styles.root}>
