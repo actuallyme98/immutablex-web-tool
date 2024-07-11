@@ -1,9 +1,5 @@
 export const key_gems_50_1 = [
   {
-    privateKey: 'fadbfeda5aec6fe24da3797bd5963fed2766d01c382b85c5d5f42eee0fc186d1',
-    address: '0x1B6ae013DB933eE4910030E4130536B007F73CE3',
-  },
-  {
     privateKey: 'e53e7551e2c5fb0b6be8493c9cf66f309756e344974bab654019eef66f53c9a5',
     address: '0xe168Be6A5Df787BE2C865DAc14Db7219cD24e9dB',
   },
@@ -198,6 +194,10 @@ export const key_gems_50_1 = [
   {
     privateKey: 'e597947531ff55b3660cf4c0cf4fbda3ac9a3f2521d8d464a74be59d742961e0',
     address: '0x1070Bd35C2aBa14aF565E51bd711c62F5b15adf6',
+  },
+  {
+    privateKey: 'fadbfeda5aec6fe24da3797bd5963fed2766d01c382b85c5d5f42eee0fc186d1',
+    address: '0x1B6ae013DB933eE4910030E4130536B007F73CE3',
   },
 ];
 
