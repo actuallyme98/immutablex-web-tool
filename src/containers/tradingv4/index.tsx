@@ -298,7 +298,7 @@ const TradingV4Page: React.FC = () => {
 
         updatedClients.push({
           ...client,
-          orderId: String(createdOrderResponse.order_id),
+          orderId: createdOrderResponse.order_id,
         });
       } catch (error: any) {
         pushLog(fileName, {
@@ -406,7 +406,7 @@ const TradingV4Page: React.FC = () => {
               type: 'ERC20',
               receiver: targetAddress,
               amount: etherToWei(sellAmount),
-              tokenAddress: '',
+              tokenAddress: IMX_ADDRESS,
             },
           },
           gasOptions,

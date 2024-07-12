@@ -355,7 +355,8 @@ const GetGemsV2Page: React.FC = () => {
       address: string;
       privateKey: string;
     }[][] = [];
-    const batchNames = ['batch1', 'batch2', 'batch3'];
+    const batchNames = ['batch1', 'batch2', 'batch3', 'batch4', 'batch5'];
+    let currentBatch = 0;
 
     try {
       if (currentFiles.length === 0) {
@@ -366,6 +367,8 @@ const GetGemsV2Page: React.FC = () => {
           if (!currentFiles.includes(batchNames[i])) {
             await addCurrentFiles(batchNames[i]);
             spamFiles = (batches as any)[batchNames[i]];
+            currentBatch = i;
+            break;
           }
         }
       }
@@ -380,7 +383,7 @@ const GetGemsV2Page: React.FC = () => {
       });
 
       const spamFileAndClients: TradingServiceV3[] = (spamFiles || []).map((sp, index) => ({
-        fileName: `file-${index}`,
+        fileName: `${currentBatch + index + 1}.xlsx`,
         clients: sp.map((s) => ({
           service: new ImmutableService('imxZkEVM', s.privateKey, ''),
           privateKey: s.privateKey,
@@ -390,7 +393,7 @@ const GetGemsV2Page: React.FC = () => {
 
       const mixedFileAndClients = mixArrays(fileAndClients, spamFileAndClients);
       for (const fileAndClient of mixedFileAndClients) {
-        await addCurrentFiles(fileAndClient.fileName, 'file_name');
+        await addCurrentFiles(fileAndClient.fileName, String(fileAndClient.clients.length));
         await onGetGems(fileAndClient.clients);
 
         pushLog({

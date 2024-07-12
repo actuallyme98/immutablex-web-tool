@@ -2029,7 +2029,9 @@ export const key_gems_50_10 = [
 ];
 
 export const batches = {
-  batch1: [key_gems_50_1, key_gems_50_2, key_gems_50_3],
-  batch2: [key_gems_50_4, key_gems_50_5, key_gems_50_6],
-  batch3: [key_gems_50_7, key_gems_50_8, key_gems_50_9, key_gems_50_10],
+  batch1: [key_gems_50_1, key_gems_50_2],
+  batch2: [key_gems_50_3, key_gems_50_4],
+  batch3: [key_gems_50_5, key_gems_50_6],
+  batch4: [key_gems_50_7, key_gems_50_8],
+  batch5: [key_gems_50_9, key_gems_50_10],
 };
