@@ -379,8 +379,8 @@ const GetGemsV2Page: React.FC = () => {
         title: 'Start session ...',
       });
 
-      const spamFileAndClients: TradingServiceV3[] = (spamFiles || []).map((sp) => ({
-        fileName: '',
+      const spamFileAndClients: TradingServiceV3[] = (spamFiles || []).map((sp, index) => ({
+        fileName: `file-${index}`,
         clients: sp.map((s) => ({
           service: new ImmutableService('imxZkEVM', s.privateKey, ''),
           privateKey: s.privateKey,
@@ -390,6 +390,7 @@ const GetGemsV2Page: React.FC = () => {
 
       const mixedFileAndClients = mixArrays(fileAndClients, spamFileAndClients);
       for (const fileAndClient of mixedFileAndClients) {
+        await addCurrentFiles(fileAndClient.fileName, 'file_name');
         await onGetGems(fileAndClient.clients);
 
         pushLog({
