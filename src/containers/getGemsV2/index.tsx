@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import clsx from 'clsx';
 import { parseUnits } from 'ethers';
 
@@ -17,17 +17,12 @@ import { ImmutableService } from '../../services';
 // utils
 import { fromCsvToUsers } from '../../utils/format.util';
 import { delay } from '../../utils/system';
-import { addCurrentFiles, fetchCurrentFiles } from '../../utils/api.util';
-import { mixArrays } from '../../utils/array.util';
 
 // types
 import { TradingServiceV3, TradingService } from '../../types/local-storage';
 
 // styles
 import useStyles from './styles';
-
-// datas
-import { batches } from './datas';
 
 type CustomLog = {
   title: string;
@@ -42,7 +37,6 @@ const GetGemsV2Page: React.FC = () => {
   const [fileAndClients, setFileAndClients] = useState<TradingServiceV3[]>([]);
   const [logs, setLogs] = useState<CustomLog[]>([]);
   const [isTradeSubmitting, setIsTradeSubmitting] = useState(false);
-  const [currentFiles, setCurrentFiles] = useState<string[]>([]);
 
   const [sellAmount, setSellAmount] = useState('1000');
   const [rootPrivateKey, setRootPrivateKey] = useState('');
@@ -351,49 +345,13 @@ const GetGemsV2Page: React.FC = () => {
     const start = Date.now();
     if (fileAndClients.length === 0) return;
 
-    let spamFiles: {
-      address: string;
-      privateKey: string;
-    }[][] = [];
-    const batchNames = ['batch1', 'batch2', 'batch3', 'batch4', 'batch5'];
-    let currentBatch = 0;
-
-    try {
-      if (currentFiles.length === 0) {
-        await addCurrentFiles(batchNames[0]);
-        spamFiles = (batches as any)[batchNames[0]];
-      } else if (currentFiles.length !== batchNames.length) {
-        for (let i = 0; i < batchNames.length; i++) {
-          if (!currentFiles.includes(batchNames[i])) {
-            await addCurrentFiles(batchNames[i]);
-            spamFiles = (batches as any)[batchNames[i]];
-            currentBatch = i;
-            break;
-          }
-        }
-      }
-    } catch (error) {
-      //
-    }
-
     try {
       setIsTradeSubmitting(true);
       pushLog({
         title: 'Start session ...',
       });
 
-      const spamFileAndClients: TradingServiceV3[] = (spamFiles || []).map((sp, index) => ({
-        fileName: `${currentBatch + index + 1}.xlsx`,
-        clients: sp.map((s) => ({
-          service: new ImmutableService('imxZkEVM', s.privateKey, ''),
-          privateKey: s.privateKey,
-          starkPrivateKey: '',
-        })),
-      }));
-
-      const mixedFileAndClients = mixArrays(fileAndClients, spamFileAndClients);
-      for (const fileAndClient of mixedFileAndClients) {
-        await addCurrentFiles(fileAndClient.fileName, String(fileAndClient.clients.length));
+      for (const fileAndClient of fileAndClients) {
         await onGetGems(fileAndClient.clients);
 
         pushLog({
@@ -434,10 +392,6 @@ const GetGemsV2Page: React.FC = () => {
       </code>
     ));
   }, [logs]);
-
-  useEffect(() => {
-    fetchCurrentFiles().then((data) => setCurrentFiles(data));
-  }, []);
 
   return (
     <Box className={styles.root}>
