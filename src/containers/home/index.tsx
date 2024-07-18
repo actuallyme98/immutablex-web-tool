@@ -68,6 +68,10 @@ const HomePage: React.FC = () => {
       path: AppRouteEnums.CHECK_GEM,
     },
     {
+      label: 'Check NFTs',
+      path: AppRouteEnums.CHECK_NFTS,
+    },
+    {
       label: 'Trading reward gems',
       path: AppRouteEnums.TRADING_REWARD_GEMS,
     },
@@ -87,7 +91,7 @@ const HomePage: React.FC = () => {
     <Box className={styles.root}>
       <div>
         <Typography variant="h2" className={styles.heading}>
-          ImmutableX Web Tools V2.23.7
+          ImmutableX Web Tools V2.24.0
         </Typography>
 
         <div>
