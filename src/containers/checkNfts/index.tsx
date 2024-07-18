@@ -13,6 +13,9 @@ import SubmitButton from '../../components/SubmitButton';
 // services
 import { ImmutableService } from '../../services';
 
+import { useSelector } from 'react-redux';
+import { sSelectedNetwork } from '../../redux/selectors/app.selector';
+
 // utils
 import { fromCsvToUsers } from '../../utils/format.util';
 import { delay } from '../../utils/system';
@@ -42,6 +45,8 @@ const CheckNFTsPage: React.FC = () => {
   const [datas, setDatas] = useState<IData[]>([]);
   const [isTradeSubmitting, setIsTradeSubmitting] = useState(false);
 
+  const selectedNetwork = useSelector(sSelectedNetwork);
+
   const onChangeFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const importedFiles = event.target.files || [];
     const newFiles = Array.from(importedFiles);
@@ -54,7 +59,11 @@ const CheckNFTsPage: React.FC = () => {
         return {
           fileName: file.name,
           clients: formattedUsers.map((user) => {
-            const service = new ImmutableService('imxZkEVM', user.privateKey, user.starkPrivateKey);
+            const service = new ImmutableService(
+              selectedNetwork,
+              user.privateKey,
+              user.starkPrivateKey,
+            );
             return {
               ...user,
               service,
