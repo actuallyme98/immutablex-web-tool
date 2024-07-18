@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import clsx from 'clsx';
 
 import readXlsxFile from 'read-excel-file';
@@ -91,14 +91,21 @@ const CheckNFTsPage: React.FC = () => {
         title: `Selected Address: ${ethAddress}`,
       });
 
-      let nfts: any[] = [];
+      const nfts: any[] = [];
 
       let retryCount = 10;
+
       while (retryCount > 0) {
         try {
-          const response = await service.getAssets();
-          nfts = response.result;
-          break;
+          let cursor = undefined;
+
+          do {
+            const response = await service.getAssets(undefined, 200, cursor);
+            nfts.push(...response.result);
+            cursor = selectedNetwork === 'imxZkEVM' ? response.page.next_cursor : response.cursor;
+          } while (cursor);
+
+          break; // Exit the loop if successful
         } catch (error: any) {
           pushLog({
             title: error.message,
@@ -109,7 +116,7 @@ const CheckNFTsPage: React.FC = () => {
 
           retryCount--;
           if (retryCount === 0) {
-            throw new Error(`Failed to checkNFTs after ${retryCount} retries for ${ethAddress}`);
+            throw new Error(`Failed to checkNFTs after 10 retries for ${ethAddress}`);
           }
         }
       }
@@ -194,6 +201,18 @@ const CheckNFTsPage: React.FC = () => {
       </code>
     ));
   }, [logs]);
+
+  useEffect(() => {
+    setFileAndClients(
+      fileAndClients.map((client) => ({
+        ...client,
+        clients: client.clients.map((c) => ({
+          ...c,
+          service: new ImmutableService(selectedNetwork, c.privateKey, c.starkPrivateKey),
+        })),
+      })),
+    );
+  }, [selectedNetwork]);
 
   return (
     <Box className={styles.root}>

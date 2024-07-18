@@ -301,12 +301,14 @@ export class ImmutableService {
     throw new Error(`${this.selectedNetwork} does not support this method!`);
   }
 
-  async getAssets(owner?: string) {
+  async getAssets(owner?: string, pageSize?: number, next_cursor?: string) {
     if (this.selectedNetwork === 'ethereum') {
       const { client, ethSigner } = getIMXElements(this.keys);
 
       return await client.listAssets({
         user: owner || ethSigner.address,
+        pageSize,
+        cursor: next_cursor,
       });
     }
 
@@ -316,6 +318,8 @@ export class ImmutableService {
       const response = await blockchainProvider.listNFTsByAccountAddress({
         accountAddress: owner || ethSigner.address,
         chainName: 'imtbl-zkevm-mainnet',
+        pageSize,
+        pageCursor: next_cursor,
       });
 
       return response as any;
